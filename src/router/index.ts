@@ -33,5 +33,7 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
 
+  // Route guards are installed in a boot file to ensure Pinia is available
+
   return Router;
 });
