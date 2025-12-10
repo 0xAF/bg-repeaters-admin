@@ -8,7 +8,7 @@
         placeholder="Search callsign, place, location, channel, RX/TX"
         filled
         clearable
-        class="col"
+        class="col search-input"
       >
         <q-tooltip>
           Search in callsign, place, location, channel tokens, and RX/TX. Enter MHz (e.g. 145.600)
@@ -16,6 +16,16 @@
         </q-tooltip>
       </q-input>
       <q-btn color="primary" icon="refresh" flat round @click="load" :loading="loading" />
+      <q-btn
+        color="primary"
+        icon="file_download"
+        label="Export CHIRP CSV"
+        flat
+        class="q-ml-sm"
+        @click="exportVisibleCsv"
+        :disable="!filteredRows.length"
+        :loading="exportingCsv"
+      />
       <q-space />
       <q-btn
         v-if="auth.isLoggedIn"
@@ -1218,6 +1228,43 @@ const filteredRows = computed<Row[]>(() => {
   return rows;
 });
 
+const exportingCsv = ref(false);
+
+async function exportVisibleCsv() {
+  const rows = filteredRows.value;
+  if (!rows.length) {
+    $q.notify({ type: 'warning', message: 'No repeaters to export for current filters.' });
+    return;
+  }
+  exportingCsv.value = true;
+  const opts = { repeaters: rows } as Record<string, unknown>;
+  try {
+    const api = await getApi();
+    const apiWithDownload = api as typeof api & {
+      downloadChirpCsv?: (options?: Record<string, unknown>) => Promise<unknown> | void;
+    };
+    if (typeof apiWithDownload.downloadChirpCsv === 'function') {
+      await apiWithDownload.downloadChirpCsv(opts);
+      return;
+    }
+    const globalLib = (
+      window as typeof window & {
+        BGRepeaters?: { downloadChirpCsv?: (o?: Record<string, unknown>) => unknown };
+      }
+    ).BGRepeaters;
+    if (globalLib?.downloadChirpCsv) {
+      globalLib.downloadChirpCsv(opts);
+      return;
+    }
+    throw new Error('CSV export unavailable');
+  } catch (err) {
+    console.error('CSV export failed', err);
+    $q.notify({ type: 'negative', message: 'CSV export failed' });
+  } finally {
+    exportingCsv.value = false;
+  }
+}
+
 function callsignUrl(cs: string): string {
   return `https://lz.free.bg/?callsign=${encodeURIComponent(cs)}`;
 }
@@ -1236,6 +1283,10 @@ function keeperUrl(name: string): string {
   max-width: 15rem;
   white-space: normal; /* allow wrapping */
   word-break: break-word; /* wrap long tokens */
+}
+
+.search-input {
+  min-width: 120px;
 }
 
 .reps-card {

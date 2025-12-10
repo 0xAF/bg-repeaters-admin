@@ -27,6 +27,7 @@ type BGRepeaterInstance = {
   deleteRepeater: (c: string) => Promise<unknown>;
   getChangelog: () => Promise<unknown>;
   getDoc: () => Promise<unknown>;
+  downloadChirpCsv?: (opts?: Record<string, unknown>) => Promise<unknown> | void;
   setSessionToken?: (token?: string) => void;
   clearSessionToken?: () => void;
   setDeviceId?: (deviceId?: string) => void;
