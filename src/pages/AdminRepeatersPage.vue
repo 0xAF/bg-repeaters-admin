@@ -1182,7 +1182,7 @@ const filteredRows = computed<Row[]>(() => {
   let rows = allRows.value.filter((r) => rowMatchesFilters(r));
 
   // Then apply free-text/numeric search
-  const s = search.value.trim();
+  const s = (typeof search.value === 'string' ? search.value : '').trim();
   if (!s) return rows;
   const term = s.toLowerCase();
 
