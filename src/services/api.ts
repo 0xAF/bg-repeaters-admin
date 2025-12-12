@@ -18,6 +18,43 @@ export type JsonArray = JsonValue[];
 export type User = { username: string; enabled: boolean; created?: string; updated?: string };
 export type UserCreate = { username: string; password: string; enabled?: boolean };
 export type UserUpdate = { password?: string; enabled?: boolean };
+export type GuestRequestStatus = 'pending' | 'approved' | 'rejected' | 'archived';
+export type GuestRequestPayload = {
+  message?: string;
+  repeater?: Record<string, unknown> | null;
+  [key: string]: unknown;
+} | null;
+export type GuestRequestRecord = {
+  id: number;
+  status: GuestRequestStatus;
+  name: string;
+  contact: string;
+  payload?: GuestRequestPayload;
+  ip?: string | null;
+  userAgent?: string | null;
+  cfRay?: string | null;
+  cfCountry?: string | null;
+  adminNotes?: string | null;
+  resolvedAt?: string | null;
+  resolvedBy?: string | null;
+  created: string;
+  updated: string;
+};
+export type GuestRequestListResponse = { requests: GuestRequestRecord[]; nextCursor?: number | null };
+export type GuestRequestListQuery = { status?: GuestRequestStatus; limit?: number; cursor?: number };
+export type GuestRequestUpdate = { status?: GuestRequestStatus; adminNotes?: string };
+export type GuestRequestSubmission = {
+  name: string;
+  contact: string;
+  message?: string;
+  repeater?: Record<string, unknown>;
+  turnstileToken: string;
+};
+export type GuestRequestSubmissionResponse = {
+  id: number;
+  status: GuestRequestStatus;
+  rateLimit: { limit: number; remaining: number; windowMinutes: number };
+};
 
 type BGRepeaterInstance = {
   getRepeaters: (q?: Record<string, unknown>) => Promise<unknown>;
@@ -200,4 +237,30 @@ export async function deleteUser(username: string): Promise<unknown> {
 
 export async function forceLogoutUser(username: string): Promise<void> {
   await http(`/admin/users/${encodeURIComponent(username)}/logout`, { method: 'POST' });
+}
+
+export async function listGuestRequests(query?: GuestRequestListQuery): Promise<GuestRequestListResponse> {
+  const params = new URLSearchParams();
+  if (query?.status) params.set('status', query.status);
+  if (typeof query?.limit === 'number') params.set('limit', String(query.limit));
+  if (typeof query?.cursor === 'number') params.set('cursor', String(query.cursor));
+  const qs = params.toString();
+  const path = qs ? `/admin/requests?${qs}` : '/admin/requests';
+  return await http<GuestRequestListResponse>(path, { method: 'GET' });
+}
+
+export async function getGuestRequest(id: number): Promise<GuestRequestRecord> {
+  return await http<GuestRequestRecord>(`/admin/requests/${id}`, { method: 'GET' });
+}
+
+export async function updateGuestRequest(id: number, data: GuestRequestUpdate): Promise<GuestRequestRecord> {
+  return await http<GuestRequestRecord>(`/admin/requests/${id}`, { method: 'PATCH', body: data });
+}
+
+export async function submitGuestRequest(data: GuestRequestSubmission): Promise<GuestRequestSubmissionResponse> {
+  return await http<GuestRequestSubmissionResponse>('/requests', {
+    method: 'POST',
+    body: data,
+    auth: 'none',
+  });
 }

@@ -22,7 +22,7 @@
       v-if="!isMobile || mobileTab === 'general'"
       :class="['row q-col-gutter-sm repeater-grid', { 'mobile-section': isMobile }]"
     >
-      <div class="col-12 col-sm-4">
+      <div :class="['col-12 col-sm-4', diffClass('callsign')]">
         <q-input
           v-model="local.callsign"
           label="Callsign"
@@ -33,7 +33,7 @@
           :rules="[req, (v) => /^(LZ0)\w{3}$/.test(v) || 'Format LZ0XXX']"
         />
       </div>
-      <div class="col-12 col-sm-4">
+      <div :class="['col-12 col-sm-4', diffClass('keeper')]">
         <q-input
           v-model="local.keeper"
           label="Keeper"
@@ -43,7 +43,7 @@
           :rules="[req, (v) => /^LZ[1-9]\w{2,3}$/.test(v) || 'Format LZ#XXX']"
         />
       </div>
-      <div class="col-12 col-sm-4">
+      <div :class="['col-12 col-sm-4', diffClass('disabled')]">
         <q-toggle
           v-model="local.disabled"
           label="Disabled"
@@ -59,44 +59,62 @@
       :class="['row q-col-gutter-sm repeater-grid q-mt-xs', { 'mobile-section': isMobile }]"
     >
       <div class="col-12">
-        <q-checkbox v-model="local.modes.fm.enabled" label="FM" :disable="props.mode === 'view'" />
-        <q-checkbox v-model="local.modes.am.enabled" label="AM" :disable="props.mode === 'view'" />
         <q-checkbox
+          :class="diffClass('modes.fm.enabled')"
+          v-model="local.modes.fm.enabled"
+          label="FM"
+          :disable="props.mode === 'view'"
+        />
+        <q-checkbox
+          :class="diffClass('modes.am.enabled')"
+          v-model="local.modes.am.enabled"
+          label="AM"
+          :disable="props.mode === 'view'"
+        />
+        <q-checkbox
+          :class="diffClass('modes.usb.enabled')"
           v-model="local.modes.usb.enabled"
           label="USB"
           :disable="props.mode === 'view'"
         />
         <q-checkbox
+          :class="diffClass('modes.lsb.enabled')"
           v-model="local.modes.lsb.enabled"
           label="LSB"
           :disable="props.mode === 'view'"
         />
         <q-checkbox
+          :class="diffClass('modes.dmr.enabled')"
           v-model="local.modes.dmr.enabled"
           label="DMR"
           :disable="props.mode === 'view'"
         />
         <q-checkbox
+          :class="diffClass('modes.dstar.enabled')"
           v-model="local.modes.dstar.enabled"
           label="DSTAR"
           :disable="props.mode === 'view'"
         />
         <q-checkbox
+          :class="diffClass('modes.fusion.enabled')"
           v-model="local.modes.fusion.enabled"
           label="FUSION/C4FM"
           :disable="props.mode === 'view'"
         />
         <q-checkbox
+          :class="diffClass('modes.nxdn.enabled')"
           v-model="local.modes.nxdn.enabled"
           label="NXDN"
           :disable="props.mode === 'view'"
         />
         <q-checkbox
+          :class="diffClass('modes.parrot.enabled')"
           v-model="local.modes.parrot.enabled"
           label="Parrot"
           :disable="props.mode === 'view'"
         />
         <q-checkbox
+          :class="diffClass('modes.beacon.enabled')"
           v-model="local.modes.beacon.enabled"
           label="Beacon"
           :disable="props.mode === 'view'"
@@ -109,7 +127,7 @@
       v-if="!isMobile || mobileTab === 'site'"
       :class="['row q-col-gutter-sm repeater-grid', { 'mobile-section': isMobile }]"
     >
-      <div class="col-12 col-sm-2">
+      <div :class="['col-12 col-sm-2', diffClass('latitude')]">
         <q-input
           v-model.number="local.latitude"
           type="number"
@@ -120,7 +138,7 @@
           :rules="[req]"
         />
       </div>
-      <div class="col-12 col-sm-2">
+      <div :class="['col-12 col-sm-2', diffClass('longitude')]">
         <q-input
           v-model.number="local.longitude"
           type="number"
@@ -131,7 +149,7 @@
           :rules="[req]"
         />
       </div>
-      <div class="col-12 col-sm-2">
+      <div :class="['col-12 col-sm-2', diffClass('altitude')]">
         <q-input
           v-model.number="local.altitude"
           type="number"
@@ -163,7 +181,7 @@
       v-if="!isMobile || mobileTab === 'site'"
       :class="['row q-col-gutter-sm repeater-grid', { 'mobile-section': isMobile }]"
     >
-      <div class="col-12 col-sm-4">
+      <div :class="['col-12 col-sm-4', diffClass('place')]">
         <q-input
           v-model="local.place"
           label="Place"
@@ -173,7 +191,7 @@
           :readonly="props.mode === 'view'"
         />
       </div>
-      <div class="col-12 col-sm-8">
+      <div :class="['col-12 col-sm-8', diffClass('location')]">
         <q-input
           v-model="local.location"
           label="Location"
@@ -190,7 +208,7 @@
       v-if="!isMobile || mobileTab === 'rf'"
       :class="['row q-col-gutter-sm repeater-grid', { 'mobile-section': isMobile }]"
     >
-      <div class="col-12 col-sm-2">
+      <div :class="['col-12 col-sm-2', diffClass('freq.rx')]">
         <q-input
           v-model="rxStr"
           type="text"
@@ -203,7 +221,7 @@
           @blur="commitRx"
         />
       </div>
-      <div class="col-12 col-sm-2">
+      <div :class="['col-12 col-sm-2', diffClass('freq.tx')]">
         <q-input
           v-model="txStr"
           type="text"
@@ -216,7 +234,7 @@
           @blur="commitTx"
         />
       </div>
-      <div class="col-12 col-sm-3">
+      <div :class="['col-12 col-sm-3', diffClass('freq.tone')]">
         <q-select
           v-model="local.freq.tone"
           :options="ctcssOptions"
@@ -230,7 +248,7 @@
           :readonly="props.mode === 'view'"
         />
       </div>
-      <div class="col-12 col-sm-2">
+      <div :class="['col-12 col-sm-2', diffClass('power')]">
         <q-input
           v-model.number="local.power"
           type="number"
@@ -250,7 +268,7 @@
       v-if="!isMobile || mobileTab === 'internet'"
       :class="['row q-col-gutter-sm', { 'mobile-section': isMobile }]"
     >
-      <div class="col-12 col-sm-2">
+      <div :class="['col-12 col-sm-2', diffClass('internet.echolink')]">
         <q-input
           v-model.number="local.internet.echolink"
           type="number"
@@ -260,7 +278,7 @@
           :readonly="props.mode === 'view'"
         />
       </div>
-      <div class="col-12 col-sm-2">
+      <div :class="['col-12 col-sm-2', diffClass('internet.allstarlink')]">
         <q-input
           v-model.number="local.internet.allstarlink"
           type="number"
@@ -270,7 +288,7 @@
           :readonly="props.mode === 'view'"
         />
       </div>
-      <div class="col-12 col-sm-4">
+      <div :class="['col-12 col-sm-4', diffClass('internet.zello')]">
         <q-input
           v-model="local.internet.zello"
           label="Zello"
@@ -280,7 +298,7 @@
           :readonly="props.mode === 'view'"
         />
       </div>
-      <div class="col-12 col-sm-4">
+      <div :class="['col-12 col-sm-4', diffClass('internet.other')]">
         <q-input
           v-model="local.internet.other"
           label="Other Internet"
@@ -297,7 +315,7 @@
       v-if="!isMobile || mobileTab === 'internet'"
       :class="['row q-col-gutter-sm repeater-grid q-mt-xs', { 'mobile-section': isMobile }]"
     >
-      <div class="col-12">
+      <div :class="['col-12', diffClass('info')]">
         <template v-if="props.mode !== 'view'">
           <q-tabs
             v-model="infoTab"
@@ -345,7 +363,7 @@
       >
         <div class="mode-header text-caption text-weight-medium q-mb-xs">D-STAR</div>
         <div class="row q-col-gutter-xs">
-          <div class="col-12 col-sm-3">
+          <div :class="['col-12 col-sm-3', diffClass('modes.dstar.reflector')]">
             <q-input
               v-model="local.modes.dstar.reflector"
               label="Reflector"
@@ -354,7 +372,7 @@
               :readonly="props.mode === 'view'"
             />
           </div>
-          <div class="col-12 col-sm-2">
+          <div :class="['col-12 col-sm-2', diffClass('modes.dstar.module')]">
             <q-input
               v-model="local.modes.dstar.module"
               label="Module"
@@ -363,7 +381,7 @@
               :readonly="props.mode === 'view'"
             />
           </div>
-          <div class="col-12 col-sm-3">
+          <div :class="['col-12 col-sm-3', diffClass('modes.dstar.gateway')]">
             <q-input
               v-model="local.modes.dstar.gateway"
               label="Gateway"
@@ -372,7 +390,7 @@
               :readonly="props.mode === 'view'"
             />
           </div>
-          <div class="col-12 col-sm-4">
+          <div :class="['col-12 col-sm-4', diffClass('modes.dstar.info')]">
             <q-input
               v-model="local.modes.dstar.info"
               label="Info"
@@ -411,7 +429,7 @@
       >
         <div class="mode-header text-caption text-weight-medium q-mb-xs">Fusion / C4FM</div>
         <div class="inputs-inline">
-          <div class="w140">
+          <div :class="['w140', diffClass('modes.fusion.reflector')]">
             <q-input
               v-model="local.modes.fusion.reflector"
               label="Reflector"
@@ -420,7 +438,7 @@
               :readonly="props.mode === 'view'"
             />
           </div>
-          <div class="w120">
+          <div :class="['w120', diffClass('modes.fusion.tg')]">
             <q-input
               v-model="local.modes.fusion.tg"
               label="Talk Group"
@@ -429,7 +447,7 @@
               :readonly="props.mode === 'view'"
             />
           </div>
-          <div class="w120">
+          <div :class="['w120', diffClass('modes.fusion.room')]">
             <q-input
               v-model="local.modes.fusion.room"
               label="Room"
@@ -438,7 +456,7 @@
               :readonly="props.mode === 'view'"
             />
           </div>
-          <div class="w100">
+          <div :class="['w100', diffClass('modes.fusion.dgid')]">
             <q-input
               v-model="local.modes.fusion.dgid"
               label="DGID"
@@ -447,7 +465,7 @@
               :readonly="props.mode === 'view'"
             />
           </div>
-          <div class="w160">
+          <div :class="['w160', diffClass('modes.fusion.wiresx_node')]">
             <q-input
               v-model="local.modes.fusion.wiresx_node"
               label="WIRES-X Node"
@@ -456,7 +474,7 @@
               :readonly="props.mode === 'view'"
             />
           </div>
-          <div class="grow">
+          <div :class="['grow', diffClass('modes.fusion.info')]">
             <q-input
               v-model="local.modes.fusion.info"
               label="Info"
@@ -496,7 +514,7 @@
       >
         <div class="mode-header text-caption text-weight-medium q-mb-xs">DMR</div>
         <div class="inputs-inline">
-          <div class="w160">
+          <div :class="['w160', diffClass('modes.dmr.network')]">
             <q-input
               v-model="local.modes.dmr.network"
               label="Network"
@@ -505,7 +523,7 @@
               :readonly="props.mode === 'view'"
             />
           </div>
-          <div class="w100">
+          <div :class="['w100', diffClass('modes.dmr.color_code')]">
             <q-input
               v-model="local.modes.dmr.color_code"
               label="CC"
@@ -514,7 +532,7 @@
               :readonly="props.mode === 'view'"
             />
           </div>
-          <div class="w120">
+          <div :class="['w120', diffClass('modes.dmr.callid')]">
             <q-input
               v-model="local.modes.dmr.callid"
               label="CallID"
@@ -523,7 +541,7 @@
               :readonly="props.mode === 'view'"
             />
           </div>
-          <div class="w120">
+          <div :class="['w120', diffClass('modes.dmr.reflector')]">
             <q-input
               v-model="local.modes.dmr.reflector"
               label="Reflector"
@@ -532,7 +550,7 @@
               :readonly="props.mode === 'view'"
             />
           </div>
-          <div class="w180">
+          <div :class="['w180', diffClass('modes.dmr.ts1_groups')]">
             <q-input
               v-model="local.modes.dmr.ts1_groups"
               label="TS1 Groups"
@@ -542,7 +560,7 @@
               :readonly="props.mode === 'view'"
             />
           </div>
-          <div class="w180">
+          <div :class="['w180', diffClass('modes.dmr.ts2_groups')]">
             <q-input
               v-model="local.modes.dmr.ts2_groups"
               label="TS2 Groups"
@@ -552,7 +570,7 @@
               :readonly="props.mode === 'view'"
             />
           </div>
-          <div class="grow">
+          <div :class="['grow', diffClass('modes.dmr.info')]">
             <q-input
               v-model="local.modes.dmr.info"
               label="Info"
@@ -601,7 +619,7 @@
       >
         <div class="mode-header text-caption text-weight-medium q-mb-xs">NXDN</div>
         <div class="row q-col-gutter-xs">
-          <div class="col-12 col-sm-4">
+          <div :class="['col-12 col-sm-4', diffClass('modes.nxdn.network')]">
             <q-input
               v-model="local.modes.nxdn.network"
               label="Network"
@@ -610,7 +628,7 @@
               :readonly="props.mode === 'view'"
             />
           </div>
-          <div class="col-12 col-sm-2">
+          <div :class="['col-12 col-sm-2', diffClass('modes.nxdn.ran')]">
             <q-input
               v-model="local.modes.nxdn.ran"
               label="RAN"
@@ -641,7 +659,7 @@
       </q-card>
     </div>
 
-    <div class="row q-mt-xs">
+    <div v-if="props.hideActions !== true" class="row q-mt-xs">
       <div class="col-12 flex justify-end q-gutter-sm">
         <q-btn
           flat
@@ -662,77 +680,25 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, watch, toRaw, computed, ref } from 'vue';
+import { reactive, watch, toRaw, computed, ref, nextTick } from 'vue';
 import { useQuasar } from 'quasar';
 import MapPicker from './MapPicker.vue';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import Maidenhead from '@amrato/maidenhead-ts';
-
-type ModeSwitch = { enabled: boolean } & Record<string, unknown>;
-type DSTARMode = ModeSwitch & {
-  reflector?: string;
-  module?: string;
-  gateway?: string;
-  info?: string;
-};
-type FusionMode = ModeSwitch & {
-  reflector?: string;
-  tg?: string;
-  room?: string;
-  dgid?: string;
-  wiresx_node?: string;
-  info?: string;
-};
-type DMRMode = ModeSwitch & {
-  network?: string;
-  color_code?: string;
-  ts1_groups?: string;
-  ts2_groups?: string;
-  info?: string;
-  callid?: string;
-  reflector?: string;
-};
-type NXDNMode = ModeSwitch & { network?: string; ran?: string };
-
-interface RepeaterFormModel {
-  callsign: string;
-  keeper: string;
-  latitude: number;
-  longitude: number;
-  place: string;
-  location?: string;
-  qth?: string;
-  altitude?: number;
-  power?: number;
-  disabled?: boolean;
-  modes: {
-    fm: ModeSwitch;
-    am: ModeSwitch;
-    usb: ModeSwitch;
-    lsb: ModeSwitch;
-    dmr: DMRMode;
-    dstar: DSTARMode;
-    fusion: FusionMode;
-    nxdn: NXDNMode;
-    parrot: ModeSwitch;
-    beacon: ModeSwitch;
-  };
-  freq: { rx: number; tx: number; tone?: number | null; channel?: string };
-  internet: { echolink?: number; allstarlink?: number; zello?: string; other?: string };
-  coverage_map_json?: string;
-  // In local form state we keep info as a single markdown string; conversion to array happens on submit.
-  info?: string;
-}
-
-// Payload type sent to backend (info as array of strings)
-interface RepeaterPayload extends Omit<RepeaterFormModel, 'info'> {
-  info?: string[];
-}
+import {
+  buildRepeaterPayload,
+  createEmptyRepeaterFormModel,
+  mergeRepeaterFormModel,
+  type RepeaterFormModel,
+  type RepeaterPayload,
+} from './repeaterFormModel';
 
 const props = defineProps<{
   modelValue: Partial<RepeaterFormModel> | null;
   mode: 'create' | 'edit' | 'view';
+  hideActions?: boolean;
+  compareAgainst?: Partial<RepeaterFormModel> | null;
 }>();
 const emit = defineEmits<{
   (e: 'update:modelValue', v: Partial<RepeaterFormModel> | null): void;
@@ -756,33 +722,56 @@ const CTCSS_TONES = [
 ] as const;
 const ctcssOptions = CTCSS_TONES.map((n) => ({ label: n.toFixed(1), value: n }));
 
-const local = reactive<RepeaterFormModel>({
-  callsign: '',
-  keeper: '',
-  latitude: 0,
-  longitude: 0,
-  place: '',
-  location: '',
-  qth: '',
-  altitude: 0,
-  power: 0,
-  disabled: false,
-  modes: {
-    fm: { enabled: false },
-    am: { enabled: false },
-    usb: { enabled: false },
-    lsb: { enabled: false },
-    dmr: { enabled: false },
-    dstar: { enabled: false },
-    fusion: { enabled: false },
-    nxdn: { enabled: false },
-    parrot: { enabled: false },
-    beacon: { enabled: false },
-  },
-  freq: { rx: 0, tx: 0 },
-  internet: {},
-  info: '',
+const local = reactive<RepeaterFormModel>(createEmptyRepeaterFormModel());
+
+const compareModel = computed<RepeaterFormModel | null>(() => {
+  if (!props.compareAgainst) return null;
+  return mergeRepeaterFormModel(props.compareAgainst ?? undefined);
 });
+
+const diffEnabled = computed(() => !!compareModel.value);
+
+function getValueByPath(source: unknown, path: string): unknown {
+  if (!source || typeof source !== 'object') return undefined;
+  return path.split('.').reduce<unknown>((acc, key) => {
+    if (acc && typeof acc === 'object' && key in (acc as Record<string, unknown>)) {
+      return (acc as Record<string, unknown>)[key];
+    }
+    return undefined;
+  }, source);
+}
+
+function normalizeDiffValue(value: unknown): string {
+  switch (typeof value) {
+    case 'undefined':
+      return '__undefined__';
+    case 'object':
+      if (value === null) return '__null__';
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return '__object__';
+      }
+    case 'number':
+      return Number.isNaN(value) ? '__nan__' : String(value);
+    case 'string':
+      return value;
+    case 'boolean':
+    case 'bigint':
+    case 'symbol':
+    case 'function':
+      return String(value);
+    default:
+      return '';
+  }
+}
+
+function diffClass(path: string): string {
+  if (!diffEnabled.value || !compareModel.value) return '';
+  const baseline = normalizeDiffValue(getValueByPath(compareModel.value, path));
+  const current = normalizeDiffValue(getValueByPath(local, path));
+  return baseline === current ? '' : 'field-changed';
+}
 
 // Tabs for Markdown edit/preview
 const infoTab = ref<'edit' | 'preview'>('edit');
@@ -830,45 +819,28 @@ function plainClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj)) as T;
 }
 
+let suppressModelEmit = 0;
+
 watch(
   () => props.modelValue,
-  (v) => {
-    if (!v) return;
-    const cloned: Partial<RepeaterFormModel> = plainClone(v);
-    const defaults: RepeaterFormModel['modes'] = {
-      fm: { enabled: false },
-      am: { enabled: false },
-      usb: { enabled: false },
-      lsb: { enabled: false },
-      dmr: { enabled: false },
-      dstar: { enabled: false },
-      fusion: { enabled: false },
-      nxdn: { enabled: false },
-      parrot: { enabled: false },
-      beacon: { enabled: false },
-    };
-    const incoming = (cloned.modes as Partial<RepeaterFormModel['modes']>) || {};
-    const merged: RepeaterFormModel['modes'] = {
-      fm: { ...defaults.fm, ...(incoming.fm as ModeSwitch) },
-      am: { ...defaults.am, ...(incoming.am as ModeSwitch) },
-      usb: { ...defaults.usb, ...(incoming.usb as ModeSwitch) },
-      lsb: { ...defaults.lsb, ...(incoming.lsb as ModeSwitch) },
-      dmr: { ...defaults.dmr, ...(incoming.dmr as DMRMode) },
-      dstar: { ...defaults.dstar, ...(incoming.dstar as DSTARMode) },
-      fusion: { ...defaults.fusion, ...(incoming.fusion as FusionMode) },
-      nxdn: { ...defaults.nxdn, ...(incoming.nxdn as NXDNMode) },
-      parrot: { ...defaults.parrot, ...(incoming.parrot as ModeSwitch) },
-      beacon: { ...defaults.beacon, ...(incoming.beacon as ModeSwitch) },
-    };
-    cloned.modes = merged;
-    // Info may come as array of strings; render as single markdown block
-    if (Array.isArray((cloned as unknown as { info?: unknown }).info)) {
-      const arr = (cloned as unknown as { info?: string[] }).info || [];
-      (cloned as RepeaterFormModel).info = arr.join('\n');
-    }
-    Object.assign(local, cloned);
+  (value) => {
+    suppressModelEmit += 1;
+    const merged = mergeRepeaterFormModel(value ?? undefined);
+    Object.assign(local, merged);
+    void nextTick(() => {
+      suppressModelEmit = Math.max(0, suppressModelEmit - 1);
+    });
   },
   { immediate: true },
+);
+
+watch(
+  local,
+  () => {
+    if (suppressModelEmit > 0) return;
+    emit('update:modelValue', plainClone(toRaw(local)));
+  },
+  { deep: true },
 );
 
 function onCancel() {
@@ -889,27 +861,7 @@ function onShowMap() {
 }
 
 function onSubmit() {
-  // Prepare a clean clone and prune empty optional fields in mode details
-  const out = plainClone(toRaw(local)) as RepeaterFormModel;
-  const pruneObj = (obj: Record<string, unknown>) => {
-    Object.keys(obj).forEach((k) => {
-      const v = obj[k];
-      if (k === 'enabled') return;
-      if (v === '' || v === null || v === undefined) delete obj[k];
-    });
-  };
-  pruneObj(out.modes.dmr as unknown as Record<string, unknown>);
-  pruneObj(out.modes.dstar as unknown as Record<string, unknown>);
-  pruneObj(out.modes.fusion as unknown as Record<string, unknown>);
-  pruneObj(out.modes.nxdn as unknown as Record<string, unknown>);
-  // Convert info string to array payload expected by backend if non-empty
-  const { info, ...rest } = out;
-  const payload: RepeaterPayload = { ...rest };
-  if (typeof info === 'string') {
-    const t = info.trim();
-    if (t) payload.info = [t];
-    else delete payload.info;
-  }
+  const payload = buildRepeaterPayload(toRaw(local) as RepeaterFormModel);
   emit('save', payload);
 }
 
@@ -1118,5 +1070,25 @@ void Promise.resolve().then(syncMapHeight);
   .inputs-inline .grow {
     flex-basis: 100%;
   }
+}
+
+.field-changed > .q-field,
+.field-changed.q-field {
+  box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.65);
+  border-radius: 8px;
+}
+
+.field-changed > .q-field .q-field__control {
+  border-radius: 8px;
+}
+
+.field-changed.q-checkbox .q-checkbox__inner,
+.field-changed.q-checkbox .q-checkbox__bg,
+.field-changed.q-toggle .q-toggle__inner,
+.field-changed.q-toggle .q-toggle__thumb,
+.field-changed > .q-toggle .q-toggle__inner,
+.field-changed > .q-toggle .q-toggle__thumb {
+  box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.65);
+  border-radius: 6px;
 }
 </style>

@@ -2,8 +2,13 @@
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file
 
 import { defineConfig } from '#q-app/wrappers';
+import { loadEnv } from 'vite';
 
 export default defineConfig((ctx) => {
+  const mode = ctx.dev ? 'development' : 'production';
+  const loadedEnv = loadEnv(mode, process.cwd(), '');
+  Object.assign(process.env, loadedEnv);
+  const turnstileSiteKey = loadedEnv.TURNSTILE_SITE_KEY || process.env.TURNSTILE_SITE_KEY || '';
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
     // preFetch: true,
@@ -54,6 +59,7 @@ export default defineConfig((ctx) => {
       // analyze: true,
       env: {
         API_BASE_URL: ctx.dev ? 'http://localhost:8787/v1' : 'https://api.varna.radio/v1',
+        TURNSTILE_SITE_KEY: turnstileSiteKey,
       },
       // rawDefine: {}
       // ignorePublicFolder: true,

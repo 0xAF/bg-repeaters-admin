@@ -8,7 +8,9 @@
 
         <q-btn v-if="auth.isLoggedIn" to="/admin/repeaters" flat dense label="Repeaters" />
         <q-btn v-else to="/repeaters" flat dense label="Repeaters" />
+        <q-btn to="/request" flat dense label="Submit Update" />
         <q-btn to="/changelog" flat dense label="Changelog" />
+        <q-btn v-if="auth.isLoggedIn" to="/admin/requests" flat dense label="Requests" />
         <q-btn v-if="auth.isLoggedIn" to="/admin/users" flat dense label="Users" />
         <q-separator vertical spaced />
         <q-btn-dropdown
@@ -69,6 +71,18 @@
             <q-icon name="restart_alt" />
           </q-item-section>
           <q-item-section>Repeaters</q-item-section>
+        </q-item>
+        <q-item clickable v-ripple to="/request">
+          <q-item-section avatar>
+            <q-icon name="campaign" />
+          </q-item-section>
+          <q-item-section>Submit Update</q-item-section>
+        </q-item>
+        <q-item v-if="auth.isLoggedIn" clickable v-ripple to="/admin/requests">
+          <q-item-section avatar>
+            <q-icon name="assignment" />
+          </q-item-section>
+          <q-item-section>Requests</q-item-section>
         </q-item>
         <q-item v-if="auth.isLoggedIn" clickable v-ripple to="/admin/users">
           <q-item-section avatar>
