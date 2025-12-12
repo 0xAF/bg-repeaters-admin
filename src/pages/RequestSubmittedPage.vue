@@ -4,9 +4,7 @@
       <q-card>
         <q-card-section class="text-center">
           <div class="text-h5 text-primary">Request Submitted</div>
-          <div class="text-subtitle2 text-grey-7">
-            Reference #{{ displayId }}
-          </div>
+          <div class="text-subtitle2 text-grey-7">Reference #{{ displayId }}</div>
           <div class="text-body2 text-grey-7 q-mt-sm">
             We sent your update to the admins. Keep this reference number for follow-up.
           </div>
@@ -35,8 +33,10 @@
             <div class="col-12 col-sm-4" v-if="summary.rateLimit">
               <span class="text-caption text-grey-6">Rate limit</span>
               <div>
-                {{ summary.rateLimit.remaining }} of {{ summary.rateLimit.limit }} left
-                ({{ summary.rateLimit.windowMinutes }} min window)
+                {{ summary.rateLimit.remaining }} of {{ summary.rateLimit.limit }} left ({{
+                  summary.rateLimit.windowMinutes
+                }}
+                min window)
               </div>
             </div>
             <div class="col-12" v-if="summary.message">

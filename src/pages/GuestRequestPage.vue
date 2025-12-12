@@ -118,7 +118,10 @@ import {
   type RepeaterFormModel,
 } from 'components/repeaterFormModel';
 import { getApi, submitGuestRequest, type GuestRequestSubmission } from 'src/services/api';
-import { saveGuestRequestSummary, type GuestRequestSummary } from 'src/services/guestRequestSummary';
+import {
+  saveGuestRequestSummary,
+  type GuestRequestSummary,
+} from 'src/services/guestRequestSummary';
 
 const $q = useQuasar();
 const router = useRouter();
@@ -245,7 +248,9 @@ const messageRules = [
   (v: string) => v.trim().length >= 5 || 'Minimum 5 characters',
 ];
 
-const isNewRepeaterSuggestion = computed(() => lookupState.value === 'new' && !!normalizedCallsign.value);
+const isNewRepeaterSuggestion = computed(
+  () => lookupState.value === 'new' && !!normalizedCallsign.value,
+);
 
 function hasText(val: string | undefined | null): boolean {
   return !!val && val.trim().length > 0;
@@ -257,9 +262,13 @@ const missingRepeaterFields = computed(() => {
   const missing: string[] = [];
   if (!hasText(model.callsign)) missing.push('Callsign');
   if (!hasText(model.keeper)) missing.push('Keeper');
-  const hasLat = typeof model.latitude === 'number' && Number.isFinite(model.latitude) && model.latitude !== 0;
+  const hasLat =
+    typeof model.latitude === 'number' && Number.isFinite(model.latitude) && model.latitude !== 0;
   if (!hasLat) missing.push('Latitude');
-  const hasLon = typeof model.longitude === 'number' && Number.isFinite(model.longitude) && model.longitude !== 0;
+  const hasLon =
+    typeof model.longitude === 'number' &&
+    Number.isFinite(model.longitude) &&
+    model.longitude !== 0;
   if (!hasLon) missing.push('Longitude');
   if (!hasText(model.place)) missing.push('Place');
   const hasRx = typeof model.freq?.rx === 'number' && model.freq.rx > 0;

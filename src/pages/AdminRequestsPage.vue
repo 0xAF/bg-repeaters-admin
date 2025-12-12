@@ -1,18 +1,8 @@
 <template>
   <q-page padding>
     <div class="row items-center q-gutter-sm q-mb-md">
-      <q-checkbox
-        v-model="showApproved"
-        label="Show approved"
-        dense
-        :disable="loading"
-      />
-      <q-checkbox
-        v-model="showDenied"
-        label="Show denied"
-        dense
-        :disable="loading"
-      />
+      <q-checkbox v-model="showApproved" label="Show approved" dense :disable="loading" />
+      <q-checkbox v-model="showDenied" label="Show denied" dense :disable="loading" />
       <q-space />
       <q-btn color="primary" icon="refresh" flat round @click="load" :loading="loading" />
     </div>
@@ -73,7 +63,9 @@
               <span class="text-caption text-grey-6">Resolved by</span>
               <div>
                 {{ dialog.data?.resolvedBy }}
-                <span class="text-caption text-grey-5">· {{ formatDate(dialog.data?.resolvedAt) }}</span>
+                <span class="text-caption text-grey-5"
+                  >· {{ formatDate(dialog.data?.resolvedAt) }}</span
+                >
               </div>
             </div>
             <div v-if="dialog.data?.payload?.message">
@@ -103,9 +95,7 @@
                   <template v-if="repeaterBaseline">
                     Highlighted fields differ from the currently stored repeater entry.
                   </template>
-                  <template v-else>
-                    This submission suggests a brand-new repeater.
-                  </template>
+                  <template v-else> This submission suggests a brand-new repeater. </template>
                 </div>
                 <div
                   v-if="repeaterPreview"
@@ -161,13 +151,7 @@
         </q-card-section>
         <q-separator />
         <q-card-section class="q-gutter-md">
-          <q-input
-            v-model="adminNotes"
-            label="Admin notes"
-            type="textarea"
-            filled
-            autogrow
-          />
+          <q-input v-model="adminNotes" label="Admin notes" type="textarea" filled autogrow />
           <div class="text-caption text-grey-6">
             Approving will sync the repeater changes and mark this request as approved.
           </div>
@@ -330,8 +314,15 @@ async function approveRequest() {
     const updated = await updateGuestRequest(current.id, payload);
     dialog.value = { open: false, data: updated };
     await load();
-    const verb = repeaterAction ? (repeaterAction.action === 'created' ? 'Added' : 'Updated') : 'Processed';
-    const messageParts = [`${verb} repeater ${repeaterAction?.callsign ?? ''}`.trim(), 'Request approved'];
+    const verb = repeaterAction
+      ? repeaterAction.action === 'created'
+        ? 'Added'
+        : 'Updated'
+      : 'Processed';
+    const messageParts = [
+      `${verb} repeater ${repeaterAction?.callsign ?? ''}`.trim(),
+      'Request approved',
+    ];
     $q.notify({ type: 'positive', message: messageParts.filter(Boolean).join('. ') });
   } catch (err) {
     console.error(err);
@@ -380,11 +371,15 @@ function extractErrorMessage(err: unknown): string {
   return 'Operation failed';
 }
 
-async function applyRepeaterSuggestion(row: GuestRequestRecord): Promise<{ action: 'created' | 'updated'; callsign: string }> {
+async function applyRepeaterSuggestion(
+  row: GuestRequestRecord,
+): Promise<{ action: 'created' | 'updated'; callsign: string }> {
   if (repeaterLoading.value) {
     throw new Error('Still loading repeater data; try again in a moment.');
   }
-  const source = repeaterPreview.value || mergeRepeaterFormModel(row.payload?.repeater as Partial<RepeaterFormModel> | undefined);
+  const source =
+    repeaterPreview.value ||
+    mergeRepeaterFormModel(row.payload?.repeater as Partial<RepeaterFormModel> | undefined);
   if (!source?.callsign?.trim()) throw new Error('Repeater suggestion is missing a callsign.');
   const normalized = mergeRepeaterFormModel(source);
   const payload = buildRepeaterPayload(normalized);
