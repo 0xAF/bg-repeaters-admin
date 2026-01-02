@@ -1,11 +1,9 @@
 <template>
   <q-page padding class="guest-request-page">
     <div class="q-pa-md q-gutter-y-md max-width">
-      <div class="text-h4 text-primary">Submit an Update</div>
+      <div class="text-h4 text-primary">{{ t('pages.guestRequest.title') }}</div>
       <div class="text-body1 text-grey-7">
-        Share repeater changes, report outages, or ask the admin team to review your entry. Provide
-        enough detail so we can validate the change. Contact information is required so we can
-        follow up.
+        {{ t('pages.guestRequest.description') }}
       </div>
 
       <q-form @submit.prevent="onSubmit" class="q-gutter-md">
@@ -13,16 +11,16 @@
           <q-input
             class="col-12 col-md-6"
             v-model="form.name"
-            label="Your name / callsign"
-            :rules="[(v) => !!v || 'Required']"
+            :label="t('pages.guestRequest.form.nameLabel')"
+            :rules="nameRules"
             filled
             dense
           />
           <q-input
             class="col-12 col-md-6"
             v-model="form.contact"
-            label="Contact (email, phone, etc.)"
-            hint="We only use this to follow up on your request"
+            :label="t('pages.guestRequest.form.contactLabel')"
+            :hint="t('pages.guestRequest.form.contactHint')"
             :rules="contactRules"
             filled
             dense
@@ -30,7 +28,7 @@
           <q-input
             class="col-12"
             v-model="form.message"
-            label="Message"
+            :label="t('pages.guestRequest.form.messageLabel')"
             type="textarea"
             autogrow
             filled
@@ -39,10 +37,11 @@
         </div>
 
         <div class="repeater-section q-mt-lg">
-          <div class="text-h5 text-primary q-mb-xs">Repeater Details</div>
+          <div class="text-h5 text-primary q-mb-xs">
+            {{ t('pages.guestRequest.repeaterSection.title') }}
+          </div>
           <div class="text-body2 text-grey-7 q-mb-sm">
-            Enter the callsign you want to update. If it already exists we will load the current
-            data; otherwise fill in as much as you know so we can review it.
+            {{ t('pages.guestRequest.repeaterSection.description') }}
           </div>
 
           <div v-if="lookupMessage" :class="lookupBannerClass">
@@ -53,7 +52,7 @@
             <div class="repeater-form-shell">
               <div v-if="lookupState === 'loading'" class="repeater-form-overlay">
                 <q-spinner color="primary" size="2em" />
-                <div class="q-mt-sm">Loading repeater details...</div>
+                <div class="q-mt-sm">{{ t('pages.guestRequest.lookup.formLoading') }}</div>
               </div>
               <RepeaterForm
                 :key="repeaterFormKey"
@@ -85,11 +84,17 @@
           <q-btn
             type="submit"
             color="primary"
-            label="Submit Request"
+            :label="t('pages.guestRequest.actions.submit')"
             :disable="!canSubmit"
             :loading="submitting"
           />
-          <q-btn flat color="primary" label="Reset" :disable="submitting" @click="resetForm" />
+          <q-btn
+            flat
+            color="primary"
+            :label="t('pages.guestRequest.actions.reset')"
+            :disable="submitting"
+            @click="resetForm"
+          />
           <div class="text-positive" v-if="success">{{ success }}</div>
           <div class="text-negative" v-if="error">{{ error }}</div>
         </div>
@@ -108,7 +113,8 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useQuasar } from 'quasar';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import TurnstileWidget from 'components/TurnstileWidget.vue';
 import RepeaterForm from 'components/RepeaterForm.vue';
 import {
@@ -125,6 +131,8 @@ import {
 
 const $q = useQuasar();
 const router = useRouter();
+const route = useRoute();
+const { t } = useI18n();
 const siteKey = process.env.TURNSTILE_SITE_KEY || '';
 const isDevMode = process.env.NODE_ENV !== 'production';
 const CALLSIGN_PATTERN = /^LZ0[A-Z]{3}$/;
@@ -134,6 +142,20 @@ const form = ref({
   contact: '',
   message: '',
 });
+
+const nameRules = [
+  (v: string) => (!!v && v.trim().length > 0) || t('pages.guestRequest.validation.nameRequired'),
+];
+const contactRules = [
+  (v: string) => (!!v && v.trim().length > 0) || t('pages.guestRequest.validation.contactRequired'),
+  (v: string) =>
+    (v && v.trim().length >= 3) || t('pages.guestRequest.validation.contactMin', { min: 3 }),
+];
+const messageRules = [
+  (v: string) => (!!v && v.trim().length > 0) || t('pages.guestRequest.validation.messageRequired'),
+  (v: string) =>
+    (v && v.trim().length >= 5) || t('pages.guestRequest.validation.messageMin', { min: 5 }),
+];
 
 const repeaterModel = ref<RepeaterFormModel>(createEmptyRepeaterFormModel());
 const repeaterFormKey = ref(0);
@@ -165,6 +187,28 @@ function setRepeaterFormState(next: RepeaterFormModel) {
 
 const normalizedCallsign = computed(() =>
   (repeaterModel.value.callsign || '').trim().toUpperCase(),
+);
+
+function normalizeQueryCallsign(raw: unknown): string | null {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim().toUpperCase();
+  return normalized.length ? normalized : null;
+}
+
+function applyRouteCallsign(raw: unknown) {
+  const normalized = normalizeQueryCallsign(raw);
+  if (!normalized) return;
+  if (normalizedCallsign.value === normalized) return;
+  repeaterModel.value.callsign = normalized;
+}
+
+watch(
+  () => route.query.callsign,
+  (callsignParam) => {
+    applyRouteCallsign(callsignParam);
+  },
+  { immediate: true },
 );
 
 watch(
@@ -208,7 +252,7 @@ async function lookupRepeater(callsign: string) {
   const requestId = ++lookupRequestId;
   lastLookupCallsign.value = callsign;
   lookupState.value = 'loading';
-  lookupMessage.value = `Looking up ${callsign}...`;
+  lookupMessage.value = t('pages.guestRequest.lookup.loading', { callsign });
   try {
     const api = await getApi();
     const response = (await api.getRepeater(callsign)) as Partial<RepeaterFormModel>;
@@ -216,16 +260,16 @@ async function lookupRepeater(callsign: string) {
     const merged = mergeRepeaterFormModel({ ...(response ?? {}), callsign });
     setRepeaterFormState(merged);
     lookupState.value = 'found';
-    lookupMessage.value = `Loaded ${callsign}. Update any fields before submitting.`;
+    lookupMessage.value = t('pages.guestRequest.lookup.found', { callsign });
   } catch (err) {
     if (requestId !== lookupRequestId) return;
     if (isNotFoundError(err)) {
       lookupState.value = 'new';
-      lookupMessage.value = `No repeater named ${callsign} exists yet. Provide full details to suggest it.`;
+      lookupMessage.value = t('pages.guestRequest.lookup.new', { callsign });
       ensureCallsignValue(callsign);
     } else {
       lookupState.value = 'error';
-      lookupMessage.value = 'Lookup failed. Continue editing manually.';
+      lookupMessage.value = t('pages.guestRequest.lookup.error');
     }
     console.error(err);
   }
@@ -239,18 +283,19 @@ function ensureCallsignValue(callsign: string) {
   lastLookupCallsign.value = callsign;
 }
 
-const contactRules = [
-  (v: string) => !!v || 'Required',
-  (v: string) => v.length >= 3 || 'Minimum 3 characters',
-];
-const messageRules = [
-  (v: string) => !!v || 'Please describe the change',
-  (v: string) => v.trim().length >= 5 || 'Minimum 5 characters',
-];
-
 const isNewRepeaterSuggestion = computed(
   () => lookupState.value === 'new' && !!normalizedCallsign.value,
 );
+
+const repeaterRequiredLabels = computed(() => ({
+  callsign: t('repeater.fields.callsign'),
+  keeper: t('repeater.fields.keeper'),
+  latitude: t('repeater.fields.latitude'),
+  longitude: t('repeater.fields.longitude'),
+  place: t('repeater.fields.place'),
+  rx: t('repeater.frequency.rx'),
+  tx: t('repeater.frequency.tx'),
+}));
 
 function hasText(val: string | undefined | null): boolean {
   return !!val && val.trim().length > 0;
@@ -260,21 +305,22 @@ const missingRepeaterFields = computed(() => {
   if (!isNewRepeaterSuggestion.value) return [] as string[];
   const model = repeaterModel.value;
   const missing: string[] = [];
-  if (!hasText(model.callsign)) missing.push('Callsign');
-  if (!hasText(model.keeper)) missing.push('Keeper');
+  const labels = repeaterRequiredLabels.value;
+  if (!hasText(model.callsign)) missing.push(labels.callsign);
+  if (!hasText(model.keeper)) missing.push(labels.keeper);
   const hasLat =
     typeof model.latitude === 'number' && Number.isFinite(model.latitude) && model.latitude !== 0;
-  if (!hasLat) missing.push('Latitude');
+  if (!hasLat) missing.push(labels.latitude);
   const hasLon =
     typeof model.longitude === 'number' &&
     Number.isFinite(model.longitude) &&
     model.longitude !== 0;
-  if (!hasLon) missing.push('Longitude');
-  if (!hasText(model.place)) missing.push('Place');
+  if (!hasLon) missing.push(labels.longitude);
+  if (!hasText(model.place)) missing.push(labels.place);
   const hasRx = typeof model.freq?.rx === 'number' && model.freq.rx > 0;
-  if (!hasRx) missing.push('RX frequency');
+  if (!hasRx) missing.push(labels.rx);
   const hasTx = typeof model.freq?.tx === 'number' && model.freq.tx > 0;
-  if (!hasTx) missing.push('TX frequency');
+  if (!hasTx) missing.push(labels.tx);
   return missing;
 });
 
@@ -287,9 +333,11 @@ const repeaterRequirementsMessage = computed(() => {
   const missing = missingRepeaterFields.value;
   if (!missing.length) return '';
   if (missing.length === 1) {
-    return `${missing[0]} is required to suggest a new repeater.`;
+    return t('pages.guestRequest.repeaterRequirements.single', { field: missing[0] });
   }
-  return `Provide these fields to suggest a new repeater: ${missing.join(', ')}.`;
+  return t('pages.guestRequest.repeaterRequirements.multiple', {
+    fields: missing.join(', '),
+  });
 });
 
 const turnstileToken = ref<string | null>(null);
@@ -320,19 +368,21 @@ const submitBlocker = computed<SubmitBlocker | null>(() => {
   return null;
 });
 
-const blockerMessageMap: Record<Exclude<SubmitBlocker, 'repeater'>, string> = {
-  name: 'Enter your name or callsign.',
-  contact: 'Provide a way for us to reach you back.',
-  message: 'Describe the change or request.',
-  turnstile: 'Complete the Turnstile challenge to continue.',
-  sitekey: 'Turnstile site key missing. Contact an administrator.',
-  submitting: 'Submitting request...',
+const blockerMessageKeyMap: Record<Exclude<SubmitBlocker, 'repeater'>, string> = {
+  name: 'pages.guestRequest.blockers.name',
+  contact: 'pages.guestRequest.blockers.contact',
+  message: 'pages.guestRequest.blockers.message',
+  turnstile: 'pages.guestRequest.blockers.turnstile',
+  sitekey: 'pages.guestRequest.blockers.sitekey',
+  submitting: 'pages.guestRequest.blockers.submitting',
 };
 
 const blockerMessage = computed(() => {
-  if (!submitBlocker.value) return '';
-  if (submitBlocker.value === 'repeater') return repeaterRequirementsMessage.value;
-  return blockerMessageMap[submitBlocker.value];
+  const blocker = submitBlocker.value;
+  if (!blocker) return '';
+  if (blocker === 'repeater') return repeaterRequirementsMessage.value;
+  const key = blockerMessageKeyMap[blocker];
+  return t(key);
 });
 
 const canSubmit = computed(() => submitBlocker.value === null);
@@ -379,7 +429,7 @@ async function onSubmit() {
   if (!canSubmit.value || !turnstileToken.value) return;
   if (repeaterNeedsRequiredFields.value) {
     const message =
-      repeaterRequirementsMessage.value || 'Provide full repeater details before submitting.';
+      repeaterRequirementsMessage.value || t('pages.guestRequest.repeaterRequirements.generic');
     error.value = message;
     $q.notify({ type: 'negative', message });
     return;
@@ -409,8 +459,10 @@ async function onSubmit() {
     };
     if (payload.message) summary.message = payload.message;
     saveGuestRequestSummary(summary);
-    $q.notify({ type: 'positive', message: 'Request submitted' });
     resetForm();
+    const successMessage = t('pages.guestRequest.notifications.success');
+    success.value = successMessage;
+    $q.notify({ type: 'positive', message: successMessage });
     void router.push({ name: 'guest-request-submitted', params: { id: String(response.id) } });
   } catch (err) {
     console.error(err);
@@ -427,7 +479,7 @@ type ErrorBody = { errors?: Record<string, unknown>; message?: string };
 type ApiError = { body?: ErrorBody; message?: string };
 
 function extractErrorMessage(err: unknown): string {
-  const fallback = 'Submission failed';
+  const fallback = t('pages.guestRequest.notifications.failure');
   if (!err || typeof err !== 'object') return fallback;
   const body = (err as ApiError).body;
   if (body) {

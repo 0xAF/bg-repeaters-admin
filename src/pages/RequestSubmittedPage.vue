@@ -3,63 +3,81 @@
     <div class="q-pa-md max-width q-mx-auto q-gutter-y-md">
       <q-card>
         <q-card-section class="text-center">
-          <div class="text-h5 text-primary">Request Submitted</div>
-          <div class="text-subtitle2 text-grey-7">Reference #{{ displayId }}</div>
+          <div class="text-h5 text-primary">{{ t('pages.requestSubmitted.title') }}</div>
+          <div class="text-subtitle2 text-grey-7">{{ referenceLabel }}</div>
           <div class="text-body2 text-grey-7 q-mt-sm">
-            We sent your update to the admins. Keep this reference number for follow-up.
+            {{ t('pages.requestSubmitted.description') }}
           </div>
         </q-card-section>
         <q-separator />
         <q-card-section v-if="summary">
           <div class="row q-col-gutter-md">
             <div class="col-12 col-sm-6">
-              <span class="text-caption text-grey-6">Name</span>
+              <span class="text-caption text-grey-6">{{
+                t('pages.requestSubmitted.fields.name')
+              }}</span>
               <div class="text-body1">{{ summary.name }}</div>
             </div>
             <div class="col-12 col-sm-6">
-              <span class="text-caption text-grey-6">Contact</span>
+              <span class="text-caption text-grey-6">{{
+                t('pages.requestSubmitted.fields.contact')
+              }}</span>
               <div class="text-body1">{{ summary.contact }}</div>
             </div>
             <div class="col-12 col-sm-4">
-              <span class="text-caption text-grey-6">Status</span>
+              <span class="text-caption text-grey-6">{{
+                t('pages.requestSubmitted.fields.status')
+              }}</span>
               <div>
                 <q-badge color="primary" outline>{{ summary.status }}</q-badge>
               </div>
             </div>
             <div class="col-12 col-sm-4">
-              <span class="text-caption text-grey-6">Submitted</span>
+              <span class="text-caption text-grey-6">{{
+                t('pages.requestSubmitted.fields.submitted')
+              }}</span>
               <div>{{ formatDate(summary.submittedAt) }}</div>
             </div>
             <div class="col-12 col-sm-4" v-if="summary.rateLimit">
-              <span class="text-caption text-grey-6">Rate limit</span>
+              <span class="text-caption text-grey-6">{{
+                t('pages.requestSubmitted.fields.rateLimit')
+              }}</span>
               <div>
-                {{ summary.rateLimit.remaining }} of {{ summary.rateLimit.limit }} left ({{
-                  summary.rateLimit.windowMinutes
+                {{
+                  t('pages.requestSubmitted.rateLimitDetails', {
+                    remaining: summary.rateLimit.remaining,
+                    limit: summary.rateLimit.limit,
+                    window: summary.rateLimit.windowMinutes,
+                  })
                 }}
-                min window)
               </div>
             </div>
             <div class="col-12" v-if="summary.message">
-              <span class="text-caption text-grey-6">Message</span>
+              <span class="text-caption text-grey-6">{{
+                t('pages.requestSubmitted.fields.message')
+              }}</span>
               <q-card flat bordered class="q-pa-sm q-mt-xs text-body2">
                 {{ summary.message }}
               </q-card>
             </div>
           </div>
           <div class="q-mt-lg" v-if="repeaterModel">
-            <div class="text-subtitle2 text-primary q-mb-sm">Repeater details</div>
+            <div class="text-subtitle2 text-primary q-mb-sm">
+              {{ t('pages.requestSubmitted.fields.repeater') }}
+            </div>
             <RepeaterForm :model-value="repeaterModel" mode="view" :hide-actions="true" />
           </div>
         </q-card-section>
         <q-card-section v-else>
-          <div class="text-grey-7">
-            We couldn't find the submission details for this reference. It might be from a different
-            browser session.
-          </div>
+          <div class="text-grey-7">{{ t('pages.requestSubmitted.missingSummary') }}</div>
         </q-card-section>
         <q-separator />
         <q-card-actions align="right">
-          <q-btn color="primary" :to="{ name: 'guest-request' }" label="Submit another" />
+          <q-btn
+            color="primary"
+            :to="{ name: 'guest-request' }"
+            :label="t('pages.requestSubmitted.submitAnother')"
+          />
         </q-card-actions>
       </q-card>
     </div>
@@ -76,9 +94,11 @@ import {
   loadLatestGuestRequestSummary,
   type GuestRequestSummary,
 } from 'src/services/guestRequestSummary';
+import { useI18n } from 'vue-i18n';
 
 const route = useRoute();
 const summary = ref<GuestRequestSummary | null>(null);
+const { t } = useI18n();
 
 const repeaterModel = computed<RepeaterFormModel | null>(() => {
   if (!summary.value?.repeater) return null;
@@ -111,6 +131,10 @@ function formatDate(value?: string) {
     return value;
   }
 }
+
+const referenceLabel = computed(() =>
+  t('pages.requestSubmitted.referenceLabel', { id: displayId.value }),
+);
 
 onMounted(hydrate);
 watch(

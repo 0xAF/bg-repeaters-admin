@@ -5,21 +5,20 @@
         v-model="search"
         dense
         debounce="300"
-        placeholder="Search callsign, place, location, channel, RX/TX"
+        :placeholder="t('pages.adminRepeaters.searchPlaceholder')"
         filled
         clearable
         class="col search-input"
       >
         <q-tooltip>
-          Search in callsign, place, location, channel tokens, and RX/TX. Enter MHz (e.g. 145.600)
-          or Hz (e.g. 145600000).
+          {{ t('pages.adminRepeaters.searchTooltip') }}
         </q-tooltip>
       </q-input>
       <q-btn color="primary" icon="refresh" flat round @click="load" :loading="loading" />
       <q-btn
         color="primary"
         icon="file_download"
-        label="Export CHIRP CSV"
+        :label="t('pages.adminRepeaters.exportCsv')"
         flat
         class="q-ml-sm"
         @click="exportVisibleCsv"
@@ -30,17 +29,65 @@
       <q-btn
         v-if="auth.isLoggedIn"
         color="primary"
-        label="New Repeater"
+        :label="t('pages.adminRepeaters.newRepeater')"
         icon="add"
         @click="openCreate"
       />
     </div>
 
-    <q-expansion-item icon="tune" label="Filters" expand-icon="expand_more" dense-toggle>
+    <q-expansion-item
+      icon="tune"
+      :label="t('pages.adminRepeaters.filters.title')"
+      expand-icon="expand_more"
+      class="q-mt-md"
+      dense-toggle
+    >
       <q-card flat bordered class="q-pa-md">
-        <div class="row q-col-gutter-md">
-          <div class="col-12 col-sm-4 col-md-3 col-lg-2">
-            <div class="text-caption q-mb-xs">Disabled</div>
+        <div class="row q-col-gutter-sm">
+          <div class="col-12 col-sm-6 col-md-3">
+            <q-input
+              v-model.number="filters.have_rx_from"
+              type="number"
+              dense
+              filled
+              clearable
+              :label="t('pages.adminRepeaters.filters.rxFrom')"
+            />
+          </div>
+          <div class="col-12 col-sm-6 col-md-3">
+            <q-input
+              v-model.number="filters.have_rx_to"
+              type="number"
+              dense
+              filled
+              clearable
+              :label="t('pages.adminRepeaters.filters.rxTo')"
+            />
+          </div>
+          <div class="col-12 col-sm-6 col-md-3">
+            <q-input
+              v-model.number="filters.have_tx_from"
+              type="number"
+              dense
+              filled
+              clearable
+              :label="t('pages.adminRepeaters.filters.txFrom')"
+            />
+          </div>
+          <div class="col-12 col-sm-6 col-md-3">
+            <q-input
+              v-model.number="filters.have_tx_to"
+              type="number"
+              dense
+              filled
+              clearable
+              :label="t('pages.adminRepeaters.filters.txTo')"
+            />
+          </div>
+        </div>
+        <div class="row q-col-gutter-sm q-mt-sm">
+          <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+            <div class="text-caption q-mb-xs">{{ t('pages.adminRepeaters.filters.disabled') }}</div>
             <q-btn-toggle
               v-model="filters.have_disabled"
               :options="triOptions"
@@ -52,45 +99,8 @@
               unelevated
             />
           </div>
-          <div class="col-6 col-sm-2">
-            <q-input
-              v-model.number="filters.have_rx_from"
-              type="number"
-              label="RX from (Hz)"
-              dense
-              filled
-            />
-          </div>
-          <div class="col-6 col-sm-2">
-            <q-input
-              v-model.number="filters.have_rx_to"
-              type="number"
-              label="RX to (Hz)"
-              dense
-              filled
-            />
-          </div>
-          <div class="col-6 col-sm-2">
-            <q-input
-              v-model.number="filters.have_tx_from"
-              type="number"
-              label="TX from (Hz)"
-              dense
-              filled
-            />
-          </div>
-          <div class="col-6 col-sm-2">
-            <q-input
-              v-model.number="filters.have_tx_to"
-              type="number"
-              label="TX to (Hz)"
-              dense
-              filled
-            />
-          </div>
-
-          <div class="col-12 col-sm-4 col-md-3 col-lg-2">
-            <div class="text-caption q-mb-xs">Has Tone</div>
+          <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+            <div class="text-caption q-mb-xs">{{ t('pages.adminRepeaters.filters.tone') }}</div>
             <q-btn-toggle
               v-model="filters.have_tone"
               :options="triOptions"
@@ -102,8 +112,8 @@
               unelevated
             />
           </div>
-          <div class="col-12 col-sm-4 col-md-3 col-lg-2">
-            <div class="text-caption q-mb-xs">FM</div>
+          <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+            <div class="text-caption q-mb-xs">{{ t('pages.adminRepeaters.filters.fm') }}</div>
             <q-btn-toggle
               v-model="filters.have_fm"
               :options="triOptions"
@@ -115,8 +125,49 @@
               unelevated
             />
           </div>
-          <div class="col-12 col-sm-4 col-md-3 col-lg-2">
-            <div class="text-caption q-mb-xs">DMR</div>
+          <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+            <div class="text-caption q-mb-xs">{{ t('pages.adminRepeaters.filters.am') }}</div>
+            <q-btn-toggle
+              v-model="filters.have_am"
+              :options="triOptions"
+              toggle-color="primary"
+              toggle-text-color="white"
+              no-caps
+              dense
+              spread
+              unelevated
+            />
+          </div>
+          <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+            <div class="text-caption q-mb-xs">{{ t('pages.adminRepeaters.filters.usb') }}</div>
+            <q-btn-toggle
+              v-model="filters.have_usb"
+              :options="triOptions"
+              toggle-color="primary"
+              toggle-text-color="white"
+              no-caps
+              dense
+              spread
+              unelevated
+            />
+          </div>
+          <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+            <div class="text-caption q-mb-xs">{{ t('pages.adminRepeaters.filters.lsb') }}</div>
+            <q-btn-toggle
+              v-model="filters.have_lsb"
+              :options="triOptions"
+              toggle-color="primary"
+              toggle-text-color="white"
+              no-caps
+              dense
+              spread
+              unelevated
+            />
+          </div>
+        </div>
+        <div class="row q-col-gutter-sm q-mt-sm">
+          <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+            <div class="text-caption q-mb-xs">{{ t('pages.adminRepeaters.filters.dmr') }}</div>
             <q-btn-toggle
               v-model="filters.have_dmr"
               :options="triOptions"
@@ -128,8 +179,8 @@
               unelevated
             />
           </div>
-          <div class="col-12 col-sm-4 col-md-3 col-lg-2">
-            <div class="text-caption q-mb-xs">DSTAR</div>
+          <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+            <div class="text-caption q-mb-xs">{{ t('pages.adminRepeaters.filters.dstar') }}</div>
             <q-btn-toggle
               v-model="filters.have_dstar"
               :options="triOptions"
@@ -141,8 +192,8 @@
               unelevated
             />
           </div>
-          <div class="col-12 col-sm-4 col-md-3 col-lg-2">
-            <div class="text-caption q-mb-xs">FUSION</div>
+          <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+            <div class="text-caption q-mb-xs">{{ t('pages.adminRepeaters.filters.fusion') }}</div>
             <q-btn-toggle
               v-model="filters.have_fusion"
               :options="triOptions"
@@ -154,8 +205,8 @@
               unelevated
             />
           </div>
-          <div class="col-12 col-sm-4 col-md-3 col-lg-2">
-            <div class="text-caption q-mb-xs">NXDN</div>
+          <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+            <div class="text-caption q-mb-xs">{{ t('pages.adminRepeaters.filters.nxdn') }}</div>
             <q-btn-toggle
               v-model="filters.have_nxdn"
               :options="triOptions"
@@ -167,8 +218,8 @@
               unelevated
             />
           </div>
-          <div class="col-12 col-sm-4 col-md-3 col-lg-2">
-            <div class="text-caption q-mb-xs">Parrot</div>
+          <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+            <div class="text-caption q-mb-xs">{{ t('pages.adminRepeaters.filters.parrot') }}</div>
             <q-btn-toggle
               v-model="filters.have_parrot"
               :options="triOptions"
@@ -180,8 +231,8 @@
               unelevated
             />
           </div>
-          <div class="col-12 col-sm-4 col-md-3 col-lg-2">
-            <div class="text-caption q-mb-xs">Beacon</div>
+          <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+            <div class="text-caption q-mb-xs">{{ t('pages.adminRepeaters.filters.beacon') }}</div>
             <q-btn-toggle
               v-model="filters.have_beacon"
               :options="triOptions"
@@ -193,9 +244,10 @@
               unelevated
             />
           </div>
-
-          <div class="col-12 col-sm-4 col-md-3 col-lg-2">
-            <div class="text-caption q-mb-xs">Echolink</div>
+        </div>
+        <div class="row q-col-gutter-sm q-mt-sm">
+          <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+            <div class="text-caption q-mb-xs">{{ t('pages.adminRepeaters.filters.echolink') }}</div>
             <q-btn-toggle
               v-model="filters.have_echolink"
               :options="triOptions"
@@ -207,8 +259,8 @@
               unelevated
             />
           </div>
-          <div class="col-12 col-sm-4 col-md-3 col-lg-2">
-            <div class="text-caption q-mb-xs">AllStarLink</div>
+          <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+            <div class="text-caption q-mb-xs">{{ t('pages.adminRepeaters.filters.allstar') }}</div>
             <q-btn-toggle
               v-model="filters.have_allstarlink"
               :options="triOptions"
@@ -220,8 +272,8 @@
               unelevated
             />
           </div>
-          <div class="col-12 col-sm-4 col-md-3 col-lg-2">
-            <div class="text-caption q-mb-xs">Zello</div>
+          <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+            <div class="text-caption q-mb-xs">{{ t('pages.adminRepeaters.filters.zello') }}</div>
             <q-btn-toggle
               v-model="filters.have_zello"
               :options="triOptions"
@@ -233,8 +285,8 @@
               unelevated
             />
           </div>
-          <div class="col-12 col-sm-4 col-md-3 col-lg-2">
-            <div class="text-caption q-mb-xs">Other Internet</div>
+          <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+            <div class="text-caption q-mb-xs">{{ t('pages.adminRepeaters.filters.other') }}</div>
             <q-btn-toggle
               v-model="filters.have_other"
               :options="triOptions"
@@ -249,7 +301,7 @@
         </div>
         <div class="row q-mt-md items-center">
           <q-space />
-          <q-btn flat label="Clear" @click="clearFilters" />
+          <q-btn flat :label="t('common.actions.clear')" @click="clearFilters" />
         </div>
       </q-card>
     </q-expansion-item>
@@ -257,14 +309,14 @@
     <q-expansion-item
       v-if="!useCardLayout"
       icon="view_week"
-      label="Columns"
+      :label="t('pages.adminRepeaters.columnsPanel.title')"
       expand-icon="expand_more"
       class="q-mt-md"
       dense-toggle
     >
       <q-card flat bordered class="q-pa-md">
         <div class="text-caption q-mb-sm">
-          Select which columns to display (Callsign and Actions are always shown)
+          {{ t('pages.adminRepeaters.columnsPanel.description') }}
         </div>
         <div class="row q-col-gutter-sm">
           <div
@@ -282,8 +334,8 @@
         </div>
         <div class="row q-mt-md items-center">
           <q-space />
-          <q-btn flat label="Defaults" @click="resetColumns" />
-          <q-btn flat label="All" @click="selectAllColumns" />
+          <q-btn flat :label="t('common.actions.defaults')" @click="resetColumns" />
+          <q-btn flat :label="t('common.actions.all')" @click="selectAllColumns" />
         </div>
       </q-card>
     </q-expansion-item>
@@ -345,7 +397,7 @@
             :key="m"
             :style="modeStyle(m)"
             class="q-mr-xs"
-            >{{ m }}</q-badge
+            >{{ modeDisplay(m) }}</q-badge
           >
         </q-td>
       </template>
@@ -384,12 +436,16 @@
                   </a>
                 </div>
                 <div class="text-caption text-grey-7">
-                  {{ props.row.place || 'Unknown place' }}
+                  {{ props.row.place || t('repeater.helpers.unknownPlace') }}
                   <span v-if="props.row.location"> · {{ props.row.location }}</span>
                 </div>
               </div>
               <div class="col-auto column items-end q-gutter-xs">
-                <q-badge v-if="props.row.disabled" color="negative" label="Disabled" />
+                <q-badge
+                  v-if="props.row.disabled"
+                  color="negative"
+                  :label="t('repeater.statuses.disabled')"
+                />
                 <div v-if="auth.isLoggedIn" class="q-gutter-xs">
                   <q-btn
                     dense
@@ -413,24 +469,24 @@
             <q-separator />
             <q-card-section class="q-gutter-sm column">
               <div>
-                <div class="text-caption text-grey">Frequencies &amp; Channels</div>
+                <div class="text-caption text-grey">{{ t('repeater.frequency.section') }}</div>
                 <div class="q-gutter-xs q-mt-xs">
                   <q-badge
                     v-if="props.row.freq?.rx"
                     :color="channelColor(props.row.freq?.channel)"
                     text-color="white"
                   >
-                    RX {{ formatMHz(props.row.freq?.rx) }} MHz
+                    {{ t('repeater.frequency.rx') }} {{ formatMHz(props.row.freq?.rx) }} MHz
                   </q-badge>
                   <q-badge
                     v-if="props.row.freq?.tx"
                     :color="channelColor(props.row.freq?.channel)"
                     text-color="white"
                   >
-                    TX {{ formatMHz(props.row.freq?.tx) }} MHz
+                    {{ t('repeater.frequency.tx') }} {{ formatMHz(props.row.freq?.tx) }} MHz
                   </q-badge>
                   <q-badge v-if="props.row.freq?.tone" color="info" text-color="black">
-                    Tone {{ props.row.freq?.tone }}
+                    {{ t('repeater.frequency.tone') }} {{ props.row.freq?.tone }}
                   </q-badge>
                   <q-badge
                     v-for="ch in channelTokens(props.row.freq?.channel)"
@@ -450,26 +506,26 @@
                   "
                   class="text-grey-6 text-caption q-mt-xs"
                 >
-                  No frequency or channel data
+                  {{ t('repeater.helpers.noFrequency') }}
                 </div>
               </div>
               <div>
-                <div class="text-caption text-grey">Modes</div>
+                <div class="text-caption text-grey">{{ t('repeater.modes.title') }}</div>
                 <div class="q-gutter-xs q-mt-xs">
                   <q-badge
                     v-for="m in modeLabels(props.row.modes)"
                     :key="`${props.row.callsign}-mode-${m}`"
                     :style="modeStyle(m)"
                   >
-                    {{ m }}
+                    {{ modeDisplay(m) }}
                   </q-badge>
                   <span v-if="modeLabels(props.row.modes).length === 0" class="text-grey-6">
-                    No modes
+                    {{ t('repeater.modes.none') }}
                   </span>
                 </div>
               </div>
               <div v-if="cardDigitalSections(props.row).length">
-                <div class="text-caption text-grey">Digital Details</div>
+                <div class="text-caption text-grey">{{ t('repeater.digital.title') }}</div>
                 <div
                   v-for="section in cardDigitalSections(props.row)"
                   :key="`${props.row.callsign}-digital-${section.title}`"
@@ -487,16 +543,20 @@
                 </div>
               </div>
               <div v-if="hasInternet(props.row)">
-                <div class="text-caption text-grey">Internet</div>
+                <div class="text-caption text-grey">{{ t('repeater.internet.title') }}</div>
                 <div class="q-gutter-xs q-mt-xs">
                   <q-chip dense outline v-if="props.row.internet?.echolink">
-                    Echolink {{ props.row.internet?.echolink }}
+                    {{ t('repeater.internet.echolink') }} {{ props.row.internet?.echolink }}
                   </q-chip>
                   <q-chip dense outline v-if="props.row.internet?.allstarlink">
-                    AllStar {{ props.row.internet?.allstarlink }}
+                    {{ t('repeater.internet.allstarlink') }} {{ props.row.internet?.allstarlink }}
                   </q-chip>
-                  <q-chip dense outline v-if="props.row.internet?.zello"> Zello </q-chip>
-                  <q-chip dense outline v-if="props.row.internet?.other"> Other Net </q-chip>
+                  <q-chip dense outline v-if="props.row.internet?.zello">
+                    {{ t('repeater.internet.zello') }}
+                  </q-chip>
+                  <q-chip dense outline v-if="props.row.internet?.other">
+                    {{ t('repeater.internet.other') }}
+                  </q-chip>
                 </div>
               </div>
             </q-card-section>
@@ -535,6 +595,7 @@ import { useQuasar, type QTableColumn } from 'quasar';
 import { getApi } from 'src/services/api';
 import RepeaterForm from 'src/components/RepeaterForm.vue';
 import type { JsonObject, JsonValue } from 'src/services/api';
+import { useI18n } from 'vue-i18n';
 
 interface Row {
   callsign: string;
@@ -575,6 +636,7 @@ interface Row {
 }
 
 const $q = useQuasar();
+const { t } = useI18n();
 
 function formatMHz(val?: number): string {
   if (typeof val !== 'number') return '';
@@ -582,25 +644,76 @@ function formatMHz(val?: number): string {
   return mhz.toFixed(3);
 }
 
-const columns: QTableColumn<Row>[] = [
-  { name: 'callsign', label: 'Callsign', field: 'callsign', align: 'left', sortable: true },
+type ColumnDef = Omit<QTableColumn<Row>, 'label'> & { label?: string; labelKey?: string };
+
+const columnDefs: ColumnDef[] = [
+  {
+    name: 'callsign',
+    labelKey: 'repeater.fields.callsign',
+    field: 'callsign',
+    align: 'left',
+    sortable: true,
+  },
   {
     name: 'disabled',
-    label: 'Disabled',
-    field: (row: Row) => (row.disabled ? 'Yes' : ''),
+    labelKey: 'repeater.fields.disabled',
+    field: (row: Row) => Boolean(row.disabled),
     align: 'center',
+    format: (val) => (val ? t('common.bool.yes') : ''),
   },
-  { name: 'keeper', label: 'Keeper', field: 'keeper', align: 'left', sortable: true },
-  { name: 'place', label: 'Place', field: 'place', align: 'left', sortable: true },
-  { name: 'location', label: 'Location', field: 'location', align: 'left', sortable: true },
-  { name: 'qth', label: 'QTH', field: 'qth', align: 'left', sortable: true },
-  { name: 'latitude', label: 'Lat', field: 'latitude', align: 'right', sortable: true },
-  { name: 'longitude', label: 'Lon', field: 'longitude', align: 'right', sortable: true },
-  { name: 'altitude', label: 'Alt (m)', field: 'altitude', align: 'right', sortable: true },
-  { name: 'power', label: 'Power (W)', field: 'power', align: 'right', sortable: true },
+  {
+    name: 'keeper',
+    labelKey: 'repeater.fields.keeper',
+    field: 'keeper',
+    align: 'left',
+    sortable: true,
+  },
+  {
+    name: 'place',
+    labelKey: 'repeater.fields.place',
+    field: 'place',
+    align: 'left',
+    sortable: true,
+  },
+  {
+    name: 'location',
+    labelKey: 'repeater.fields.location',
+    field: 'location',
+    align: 'left',
+    sortable: true,
+  },
+  { name: 'qth', labelKey: 'repeater.fields.qth', field: 'qth', align: 'left', sortable: true },
+  {
+    name: 'latitude',
+    labelKey: 'repeater.fields.latitude',
+    field: 'latitude',
+    align: 'right',
+    sortable: true,
+  },
+  {
+    name: 'longitude',
+    labelKey: 'repeater.fields.longitude',
+    field: 'longitude',
+    align: 'right',
+    sortable: true,
+  },
+  {
+    name: 'altitude',
+    labelKey: 'repeater.fields.altitude',
+    field: 'altitude',
+    align: 'right',
+    sortable: true,
+  },
+  {
+    name: 'power',
+    labelKey: 'repeater.fields.power',
+    field: 'power',
+    align: 'right',
+    sortable: true,
+  },
   {
     name: 'rx',
-    label: 'RX (MHz)',
+    labelKey: 'repeater.frequency.rxMHz',
     field: (row: Row) => row.freq?.rx ?? 0,
     align: 'right',
     sortable: true,
@@ -608,7 +721,7 @@ const columns: QTableColumn<Row>[] = [
   },
   {
     name: 'tx',
-    label: 'TX (MHz)',
+    labelKey: 'repeater.frequency.txMHz',
     field: (row: Row) => row.freq?.tx ?? 0,
     align: 'right',
     sortable: true,
@@ -616,7 +729,7 @@ const columns: QTableColumn<Row>[] = [
   },
   {
     name: 'tone',
-    label: 'Tone',
+    labelKey: 'repeater.frequency.tone',
     field: (row: Row) => row.freq?.tone ?? 0,
     align: 'right',
     sortable: true,
@@ -624,35 +737,59 @@ const columns: QTableColumn<Row>[] = [
   },
   {
     name: 'channel',
-    label: 'Channel',
+    labelKey: 'repeater.frequency.channel',
     field: (row: Row) => row.freq?.channel ?? '',
     align: 'left',
     sortable: true,
   },
   {
     name: 'echolink',
-    label: 'Echolink',
+    labelKey: 'repeater.internet.echolink',
     field: (row: Row) => row.internet?.echolink ?? '',
     align: 'right',
   },
   {
     name: 'allstarlink',
-    label: 'AllStarLink',
+    labelKey: 'repeater.internet.allstarlink',
     field: (row: Row) => row.internet?.allstarlink ?? '',
     align: 'right',
   },
-  { name: 'zello', label: 'Zello', field: (row: Row) => row.internet?.zello ?? '', align: 'left' },
+  {
+    name: 'zello',
+    labelKey: 'repeater.internet.zello',
+    field: (row: Row) => row.internet?.zello ?? '',
+    align: 'left',
+  },
   {
     name: 'net_other',
-    label: 'Other Net',
+    labelKey: 'repeater.internet.other',
     field: (row: Row) => row.internet?.other ?? '',
     align: 'left',
   },
-  { name: 'modes', label: 'Modes', field: 'modes', align: 'left' },
-  { name: 'added', label: 'Added', field: 'added', align: 'left', sortable: true },
-  { name: 'updated', label: 'Updated', field: 'updated', align: 'left', sortable: true },
+  { name: 'modes', labelKey: 'repeater.modes.title', field: 'modes', align: 'left' },
+  {
+    name: 'added',
+    labelKey: 'repeater.fields.added',
+    field: 'added',
+    align: 'left',
+    sortable: true,
+  },
+  {
+    name: 'updated',
+    labelKey: 'repeater.fields.updated',
+    field: 'updated',
+    align: 'left',
+    sortable: true,
+  },
   { name: 'actions', label: '', field: (row: Row) => row.callsign, align: 'right' },
 ];
+
+const columns = computed<QTableColumn<Row>[]>(() =>
+  columnDefs.map((col) => ({
+    ...col,
+    label: col.labelKey ? t(col.labelKey) : (col.label ?? ''),
+  })),
+);
 
 const search = ref('');
 const auth = useAuthStore();
@@ -662,26 +799,24 @@ const pagination = ref({ page: 1, rowsPerPage: 10 });
 const useCardLayout = computed(() => $q.screen.lt.md);
 const dialogTitle = computed(() => {
   const cs = dialog.value.data?.callsign ? String(dialog.value.data.callsign).toUpperCase() : '';
-  const base =
-    dialog.value.mode === 'create'
-      ? 'Create Repeater'
-      : auth.isLoggedIn
-        ? dialog.value.mode === 'edit'
-          ? 'Edit Repeater'
-          : 'View Repeater'
-        : 'View Repeater';
+  let base: string;
+  if (dialog.value.mode === 'create') base = t('pages.adminRepeaters.dialog.create');
+  else if (dialog.value.mode === 'edit') base = t('pages.adminRepeaters.dialog.edit');
+  else base = t('pages.adminRepeaters.dialog.view');
   return cs ? `${base}: ${cs}` : base;
 });
 
 // Column selection state
-const selectableColumnNames = columns
+const selectableColumnNames = columnDefs
   .map((c) => c.name)
   .filter((n) => n !== 'callsign' && n !== 'actions');
 
-const columnOptions = selectableColumnNames.map((n) => ({
-  label: columns.find((c) => c.name === n)!.label,
-  value: n,
-}));
+const columnOptions = computed(() =>
+  selectableColumnNames.map((n) => ({
+    label: columns.value.find((c) => c.name === n)?.label ?? n,
+    value: n,
+  })),
+);
 
 const defaultSelected = [
   'keeper',
@@ -700,11 +835,11 @@ const visibleColumns = computed(() => {
 });
 
 type Tri = 'any' | 'true' | 'false';
-const triOptions: { label: string; value: Tri }[] = [
-  { label: 'Any', value: 'any' },
-  { label: 'Yes', value: 'true' },
-  { label: 'No', value: 'false' },
-];
+const triOptions = computed<{ label: string; value: Tri }[]>(() => [
+  { label: t('common.bool.any'), value: 'any' },
+  { label: t('common.bool.yes'), value: 'true' },
+  { label: t('common.bool.no'), value: 'false' },
+]);
 
 const filters = ref({
   have_rx_from: null as number | null,
@@ -755,6 +890,27 @@ function modeLabels(modes?: Record<string, unknown>) {
   return Object.keys(modes).filter((k) => modeEnabled(modes[k]));
 }
 
+const modeKeyMap: Record<string, string> = {
+  fm: 'repeater.modes.fm',
+  am: 'repeater.modes.am',
+  usb: 'repeater.modes.usb',
+  lsb: 'repeater.modes.lsb',
+  dmr: 'repeater.modes.dmr',
+  dstar: 'repeater.modes.dstar',
+  fusion: 'repeater.modes.fusion',
+  nxdn: 'repeater.modes.nxdn',
+  parrot: 'repeater.modes.parrot',
+  beacon: 'repeater.modes.beacon',
+};
+
+function modeDisplay(mode: string): string {
+  const key = mode?.toLowerCase();
+  if (key && modeKeyMap[key]) {
+    return t(modeKeyMap[key]);
+  }
+  return mode?.toUpperCase() ?? '';
+}
+
 function modeStyle(mode: string): Record<string, string> {
   switch (mode.toLowerCase()) {
     case 'dstar':
@@ -797,47 +953,52 @@ function hasChannels(channel?: string | null): boolean {
 
 type DigitalSection = { title: string; entries: { label: string; value: string }[] };
 
-const digitalFieldConfig: {
-  key: 'dstar' | 'fusion' | 'dmr' | 'nxdn';
-  title: string;
-  labels: Record<string, string>;
-}[] = [
+const digitalFieldConfig = computed(() => [
   {
-    key: 'dstar',
-    title: 'D-STAR',
-    labels: { reflector: 'Reflector', module: 'Module', gateway: 'Gateway', info: 'Info' },
-  },
-  {
-    key: 'fusion',
-    title: 'Yaesu Fusion',
+    key: 'dstar' as const,
+    title: t('repeater.digital.sections.dstar'),
     labels: {
-      reflector: 'Reflector',
-      room: 'Room',
-      tg: 'Talk Group',
-      dgid: 'DG-ID',
-      wiresx_node: 'WIRES-X',
-      info: 'Info',
+      reflector: t('repeater.digital.labels.reflector'),
+      module: t('repeater.digital.labels.module'),
+      gateway: t('repeater.digital.labels.gateway'),
+      info: t('repeater.digital.labels.info'),
     },
   },
   {
-    key: 'dmr',
-    title: 'DMR',
+    key: 'fusion' as const,
+    title: t('repeater.digital.sections.fusion'),
     labels: {
-      network: 'Network',
-      color_code: 'CC',
-      callid: 'CallID',
-      reflector: 'Reflector',
-      ts1_groups: 'TS1 Groups',
-      ts2_groups: 'TS2 Groups',
-      info: 'Info',
+      reflector: t('repeater.digital.labels.reflector'),
+      room: t('repeater.digital.labels.room'),
+      tg: t('repeater.digital.labels.tg'),
+      dgid: t('repeater.digital.labels.dgid'),
+      wiresx_node: t('repeater.digital.labels.wiresx_node'),
+      info: t('repeater.digital.labels.info'),
     },
   },
   {
-    key: 'nxdn',
-    title: 'NXDN',
-    labels: { network: 'Network', ran: 'RAN', info: 'Info' },
+    key: 'dmr' as const,
+    title: t('repeater.digital.sections.dmr'),
+    labels: {
+      network: t('repeater.digital.labels.network'),
+      color_code: t('repeater.digital.labels.color_code'),
+      callid: t('repeater.digital.labels.callid'),
+      reflector: t('repeater.digital.labels.reflector'),
+      ts1_groups: t('repeater.digital.labels.ts1_groups'),
+      ts2_groups: t('repeater.digital.labels.ts2_groups'),
+      info: t('repeater.digital.labels.info'),
+    },
   },
-];
+  {
+    key: 'nxdn' as const,
+    title: t('repeater.digital.sections.nxdn'),
+    labels: {
+      network: t('repeater.digital.labels.network'),
+      ran: t('repeater.digital.labels.ran'),
+      info: t('repeater.digital.labels.info'),
+    },
+  },
+]);
 
 function formatDetailValue(val: unknown): string | null {
   if (val === undefined || val === null) return null;
@@ -849,7 +1010,7 @@ function formatDetailValue(val: unknown): string | null {
     return rendered.length ? rendered : null;
   }
   if (typeof val === 'number') return Number.isFinite(val) ? String(val) : null;
-  if (typeof val === 'boolean') return val ? 'Yes' : 'No';
+  if (typeof val === 'boolean') return val ? t('common.bool.yes') : t('common.bool.no');
   if (typeof val === 'string') {
     const trimmed = val.trim();
     return trimmed.length ? trimmed : null;
@@ -872,7 +1033,7 @@ function buildDigitalEntries(
 function buildDigitalSections(source?: Record<string, unknown>): DigitalSection[] {
   if (!source) return [];
   const sections: DigitalSection[] = [];
-  for (const cfg of digitalFieldConfig) {
+  for (const cfg of digitalFieldConfig.value) {
     const raw = source[cfg.key];
     if (!raw || typeof raw !== 'object') continue;
     if (!modeEnabled(raw)) continue;
@@ -969,7 +1130,7 @@ async function load() {
     // Use data as-is per new API schema (no legacy transformations)
     allRows.value = fetched;
   } catch (e) {
-    $q.notify({ type: 'negative', message: 'Failed to load repeaters' });
+    $q.notify({ type: 'negative', message: t('pages.adminRepeaters.notifications.loadFailed') });
     console.error(e);
   } finally {
     loading.value = false;
@@ -1076,17 +1237,23 @@ async function onSave(payload: unknown) {
     const body = payload as Record<string, unknown>;
     if (dialog.value.mode === 'create') {
       await api.createRepeater(body as unknown as JsonObject);
-      $q.notify({ type: 'positive', message: 'Repeater created' });
+      $q.notify({
+        type: 'positive',
+        message: t('pages.adminRepeaters.notifications.createSuccess'),
+      });
     } else {
       const cs = (body.callsign as string) || '';
       await api.updateRepeater(cs, body as unknown as JsonObject);
-      $q.notify({ type: 'positive', message: 'Repeater updated' });
+      $q.notify({
+        type: 'positive',
+        message: t('pages.adminRepeaters.notifications.updateSuccess'),
+      });
     }
     dialog.value.open = false;
     await load();
   } catch (e) {
     // Legacy transformation helpers removed; using native schema directly.
-    $q.notify({ type: 'negative', message: 'Save failed' });
+    $q.notify({ type: 'negative', message: t('pages.adminRepeaters.notifications.saveFailed') });
     console.error(e);
   }
 }
@@ -1094,19 +1261,25 @@ async function onSave(payload: unknown) {
 function onDelete(row: Row) {
   if (!auth.isLoggedIn) return;
   $q.dialog({
-    title: 'Confirm',
-    message: `Delete ${row.callsign}?`,
+    title: t('common.dialog.confirm'),
+    message: t('pages.adminRepeaters.notifications.deleteConfirm', { callsign: row.callsign }),
     cancel: true,
-    ok: { label: 'Delete', color: 'negative' },
+    ok: { label: t('common.actions.delete'), color: 'negative' },
   }).onOk(() => {
     void (async () => {
       try {
         const api = await getApi();
         await api.deleteRepeater(row.callsign);
-        $q.notify({ type: 'positive', message: 'Repeater deleted' });
+        $q.notify({
+          type: 'positive',
+          message: t('pages.adminRepeaters.notifications.deleteSuccess'),
+        });
         await load();
       } catch (e) {
-        $q.notify({ type: 'negative', message: 'Delete failed' });
+        $q.notify({
+          type: 'negative',
+          message: t('pages.adminRepeaters.notifications.deleteFailed'),
+        });
         console.error(e);
       }
     })();
@@ -1233,7 +1406,7 @@ const exportingCsv = ref(false);
 async function exportVisibleCsv() {
   const rows = filteredRows.value;
   if (!rows.length) {
-    $q.notify({ type: 'warning', message: 'No repeaters to export for current filters.' });
+    $q.notify({ type: 'warning', message: t('pages.adminRepeaters.notifications.csvEmpty') });
     return;
   }
   exportingCsv.value = true;
@@ -1259,7 +1432,7 @@ async function exportVisibleCsv() {
     throw new Error('CSV export unavailable');
   } catch (err) {
     console.error('CSV export failed', err);
-    $q.notify({ type: 'negative', message: 'CSV export failed' });
+    $q.notify({ type: 'negative', message: t('pages.adminRepeaters.notifications.csvFailed') });
   } finally {
     exportingCsv.value = false;
   }

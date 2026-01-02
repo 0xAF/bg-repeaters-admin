@@ -2,15 +2,15 @@
   <q-page class="window-height window-width row justify-center items-center">
     <q-card flat bordered style="min-width: 360px">
       <q-card-section>
-        <div class="text-h6">Login</div>
-        <div class="text-caption">Basic auth is used for write operations.</div>
+        <div class="text-h6">{{ t('pages.login.title') }}</div>
+        <div class="text-caption">{{ t('pages.login.subtitle') }}</div>
       </q-card-section>
       <q-separator />
       <q-card-section>
         <q-form @submit.prevent="onLogin" class="q-gutter-md">
           <q-input
             v-model="username"
-            label="Username"
+            :label="t('pages.login.username')"
             dense
             filled
             autofocus
@@ -18,7 +18,7 @@
           />
           <q-input
             v-model="password"
-            label="Password"
+            :label="t('pages.login.password')"
             type="password"
             dense
             filled
@@ -26,8 +26,13 @@
           />
 
           <div class="row items-center q-gutter-sm">
-            <q-btn color="primary" label="Login" type="submit" :loading="auth.verifying" />
-            <q-btn flat label="Back to list" @click="goHome" />
+            <q-btn
+              color="primary"
+              :label="t('pages.login.submit')"
+              type="submit"
+              :loading="auth.verifying"
+            />
+            <q-btn flat :label="t('pages.login.back')" @click="goHome" />
           </div>
           <div v-if="auth.error" class="text-negative q-mt-sm">{{ auth.error }}</div>
         </q-form>
@@ -40,9 +45,11 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from 'src/stores/auth';
+import { useI18n } from 'vue-i18n';
 
 const auth = useAuthStore();
 const router = useRouter();
+const { t } = useI18n();
 
 const username = ref('');
 const password = ref('');

@@ -1,9 +1,16 @@
 <template>
   <q-page padding>
     <div class="row items-center q-mb-md">
-      <div class="text-h6">Changelog</div>
+      <div class="text-h6">{{ t('pages.changelog.title') }}</div>
       <q-space />
-      <q-btn flat round icon="refresh" @click="load" :loading="loading" />
+      <q-btn
+        flat
+        round
+        icon="refresh"
+        @click="load"
+        :loading="loading"
+        :aria-label="t('common.actions.refresh')"
+      />
     </div>
 
     <q-timeline color="primary">
@@ -25,10 +32,12 @@
 import { ref, onMounted } from 'vue';
 import { useQuasar } from 'quasar';
 import { getApi } from 'src/services/api';
+import { useI18n } from 'vue-i18n';
 
 const $q = useQuasar();
 const loading = ref(false);
 const changes = ref<{ date: string; who: string; info: string }[]>([]);
+const { t } = useI18n();
 
 async function load() {
   loading.value = true;
@@ -39,7 +48,7 @@ async function load() {
     };
     changes.value = res.changes || [];
   } catch {
-    $q.notify({ type: 'negative', message: 'Failed to load changelog' });
+    $q.notify({ type: 'negative', message: t('pages.changelog.error') });
   } finally {
     loading.value = false;
   }
