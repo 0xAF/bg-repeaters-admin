@@ -6,6 +6,7 @@ const en = {
         nav: {
             repeaters: 'Repeaters',
             submitUpdate: 'Submit Update',
+            map: 'Map',
             changelog: 'Changelog',
             requests: 'Requests',
             users: 'Users',
@@ -56,6 +57,7 @@ const en = {
     layout: {
         title: 'BG Repeaters Admin',
         menuButton: 'Menu',
+        backendUnavailable: 'Repeater backend is unavailable right now. Some features may not work.',
     },
     pages: {
         landing: {

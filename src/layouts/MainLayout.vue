@@ -15,14 +15,42 @@
 
         <q-btn
           v-if="auth.isLoggedIn"
-          to="/admin/repeaters"
+          :to="bgrepsError ? undefined : '/admin/repeaters'"
           flat
           dense
+          :disable="!!bgrepsError"
           :label="t('common.nav.repeaters')"
         />
-        <q-btn v-else to="/repeaters" flat dense :label="t('common.nav.publicRepeaters')" />
-        <q-btn to="/request" flat dense :label="t('common.nav.submitUpdate')" />
-        <q-btn to="/changelog" flat dense :label="t('common.nav.changelog')" />
+        <q-btn
+          v-else
+          :to="bgrepsError ? undefined : '/repeaters'"
+          flat
+          dense
+          :disable="!!bgrepsError"
+          :label="t('common.nav.publicRepeaters')"
+        />
+        <q-btn
+          :to="bgrepsError ? undefined : '/request'"
+          flat
+          dense
+          :disable="!!bgrepsError"
+          :label="t('common.nav.submitUpdate')"
+        />
+        <q-btn
+          flat
+          dense
+          :label="t('common.nav.map')"
+          href="https://lz-map.org"
+          target="_blank"
+          rel="noopener"
+        />
+        <q-btn
+          :to="bgrepsError ? undefined : '/changelog'"
+          flat
+          dense
+          :disable="!!bgrepsError"
+          :label="t('common.nav.changelog')"
+        />
         <q-btn
           v-if="auth.isLoggedIn"
           to="/admin/requests"
@@ -107,65 +135,116 @@
       <q-list>
         <q-item-label header> {{ t('common.navigation') }} </q-item-label>
 
-        <q-item v-if="auth.isLoggedIn" clickable v-ripple to="/admin/repeaters">
+        <q-item
+          v-if="auth.isLoggedIn"
+          clickable
+          v-ripple
+          :to="bgrepsError ? undefined : '/admin/repeaters'"
+          :disable="!!bgrepsError"
+        >
           <q-item-section avatar>
             <q-icon name="admin_panel_settings" />
           </q-item-section>
           <q-item-section>{{ t('common.nav.repeaters') }}</q-item-section>
         </q-item>
-        <q-item v-else clickable v-ripple to="/repeaters">
+        <q-item
+          v-else
+          clickable
+          v-ripple
+          :to="bgrepsError ? undefined : '/repeaters'"
+          :disable="!!bgrepsError"
+        >
           <q-item-section avatar>
             <q-icon name="restart_alt" />
           </q-item-section>
           <q-item-section>{{ t('common.nav.publicRepeaters') }}</q-item-section>
         </q-item>
-        <q-item clickable v-ripple to="/request">
+        <q-item
+          clickable
+          v-ripple
+          :to="bgrepsError ? undefined : '/request'"
+          :disable="!!bgrepsError"
+        >
           <q-item-section avatar>
             <q-icon name="campaign" />
           </q-item-section>
           <q-item-section>{{ t('common.nav.submitUpdate') }}</q-item-section>
         </q-item>
-        <q-item v-if="auth.isLoggedIn" clickable v-ripple to="/admin/requests">
+        <q-item clickable v-ripple tag="a" href="https://lz-map.org" target="_blank" rel="noopener">
           <q-item-section avatar>
-            <q-icon name="assignment" />
+            <q-icon name="public" />
           </q-item-section>
-          <q-item-section>{{ t('common.nav.requests') }}</q-item-section>
+          <q-item-section>{{ t('common.nav.map') }}</q-item-section>
         </q-item>
-        <q-item v-if="auth.isLoggedIn" clickable v-ripple to="/admin/users">
-          <q-item-section avatar>
-            <q-icon name="group" />
-          </q-item-section>
-          <q-item-section>{{ t('common.nav.users') }}</q-item-section>
-        </q-item>
-        <q-item clickable v-ripple to="/changelog">
+        <q-item
+          clickable
+          v-ripple
+          :to="bgrepsError ? undefined : '/changelog'"
+          :disable="!!bgrepsError"
+        >
           <q-item-section avatar>
             <q-icon name="history" />
           </q-item-section>
           <q-item-section>{{ t('common.nav.changelog') }}</q-item-section>
         </q-item>
+        <q-item
+          v-if="auth.isLoggedIn"
+          clickable
+          v-ripple
+          :to="bgrepsError ? undefined : '/admin/requests'"
+          :disable="!!bgrepsError"
+        >
+          <q-item-section avatar>
+            <q-icon name="assignment" />
+          </q-item-section>
+          <q-item-section>{{ t('common.nav.requests') }}</q-item-section>
+        </q-item>
+        <q-item
+          v-if="auth.isLoggedIn"
+          clickable
+          v-ripple
+          :to="bgrepsError ? undefined : '/admin/users'"
+          :disable="!!bgrepsError"
+        >
+          <q-item-section avatar>
+            <q-icon name="group" />
+          </q-item-section>
+          <q-item-section>{{ t('common.nav.users') }}</q-item-section>
+        </q-item>
       </q-list>
     </q-drawer>
 
     <q-page-container>
+      <div v-if="bgrepsError" class="q-pa-md" aria-live="polite">
+        <q-banner class="bg-red-1 text-negative" dense rounded>
+          <div class="text-subtitle2">{{ t('layout.backendUnavailable') }}</div>
+          <div class="text-caption">{{ bgrepsError }}</div>
+        </q-banner>
+      </div>
       <router-view />
     </q-page-container>
   </q-layout>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
 import { useQuasar } from 'quasar';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from 'src/stores/auth';
 import { SUPPORTED_LANGUAGES, setLocale, type LocaleCode } from 'src/i18n';
 
 const auth = useAuthStore();
 const router = useRouter();
+const route = useRoute();
 const $q = useQuasar();
 const { t, locale } = useI18n();
 
 const leftDrawerOpen = ref(false);
+const bgrepsError = ref<string | null>(
+  typeof window !== 'undefined' ? (window.__BGREPS_LOAD_ERROR__ ?? null) : null,
+);
+const backendLockedPaths = ['/repeaters', '/admin/repeaters', '/request', '/changelog'];
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value;
@@ -174,6 +253,12 @@ function toggleLeftDrawer() {
 async function logout() {
   await auth.logout();
   void router.push('/');
+}
+
+function handleBgrepsError(event: Event) {
+  const detail = (event as CustomEvent<string>).detail;
+  const fallback = t('layout.backendUnavailable');
+  bgrepsError.value = typeof detail === 'string' && detail.length ? detail : fallback;
 }
 
 onMounted(() => {
@@ -185,7 +270,25 @@ onMounted(() => {
   } else {
     setTheme('auto');
   }
+  window.addEventListener('bgreps-load-error', handleBgrepsError as EventListener);
 });
+
+onBeforeUnmount(() => {
+  window.removeEventListener('bgreps-load-error', handleBgrepsError as EventListener);
+});
+
+watch(
+  [() => route.fullPath, () => bgrepsError.value],
+  ([currentPath, error]) => {
+    if (!error) return;
+    if (!backendLockedPaths.some((locked) => currentPath.startsWith(locked))) return;
+    if (currentPath !== '/') {
+      void router.replace('/');
+      $q.notify({ type: 'warning', message: t('layout.backendUnavailable') });
+    }
+  },
+  { immediate: true },
+);
 
 type ThemePref = 'auto' | 'light' | 'dark';
 const themePref = ref<ThemePref>('auto');

@@ -6,6 +6,7 @@ const bg = {
         nav: {
             repeaters: 'Репитри',
             submitUpdate: 'Изпрати промяна',
+            map: 'Карта',
             changelog: 'Промени',
             requests: 'Заявки',
             users: 'Потребители',
@@ -56,6 +57,7 @@ const bg = {
     layout: {
         title: 'BG Repeaters Админ',
         menuButton: 'Меню',
+        backendUnavailable: 'Сървърът с данните за репитри е недостъпен. Част от функциите няма да работят.',
     },
     pages: {
         landing: {

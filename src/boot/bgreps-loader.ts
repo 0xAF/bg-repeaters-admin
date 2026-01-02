@@ -1,11 +1,12 @@
 import { boot } from 'quasar/wrappers';
 
+type BGRepeatersCtor = new (opts?: Record<string, unknown>) => unknown;
+
 declare global {
   interface Window {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    BGRepeaters?: new (opts?: Record<string, unknown>) => any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    __BGREPS_READY__?: Promise<new (opts?: Record<string, unknown>) => any>;
+    BGRepeaters?: BGRepeatersCtor;
+    __BGREPS_READY__?: Promise<BGRepeatersCtor | undefined>;
+    __BGREPS_LOAD_ERROR__?: string;
   }
 }
 
@@ -22,13 +23,28 @@ export default boot(async () => {
     return;
   }
   const libUrl = computeLibUrl();
-  window.__BGREPS_READY__ = new Promise((resolve, reject) => {
+  const notifyError = (message: string) => {
+    window.__BGREPS_LOAD_ERROR__ = message;
+    window.dispatchEvent(new CustomEvent('bgreps-load-error', { detail: message }));
+  };
+  window.__BGREPS_READY__ = new Promise((resolve) => {
     const s = document.createElement('script');
     s.src = libUrl;
     s.async = false; // ensure execution order
-    s.onload = () => resolve(window.BGRepeaters as unknown as new (opts?: Record<string, unknown>) => unknown);
-    s.onerror = () => reject(new Error('Failed to load BGRepeaters library'));
+    s.onload = () => resolve(window.BGRepeaters as BGRepeatersCtor);
+    s.onerror = () => {
+      const message = 'Repeater backend unavailable (script load failed).';
+      console.error('[BGRepeaters] script load failed for', libUrl);
+      notifyError(message);
+      resolve(undefined);
+    };
     document.head.appendChild(s);
   });
-  await window.__BGREPS_READY__;
+  try {
+    await window.__BGREPS_READY__;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Repeater backend unavailable.';
+    console.error('[BGRepeaters] initialization failed', err);
+    notifyError(message);
+  }
 });
