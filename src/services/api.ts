@@ -15,9 +15,9 @@ type TokenListener = (token: string | null) => void;
 export type JsonValue = string | number | boolean | null | JsonObject | JsonArray;
 export interface JsonObject { [key: string]: JsonValue }
 export type JsonArray = JsonValue[];
-export type User = { username: string; enabled: boolean; created?: string; updated?: string };
-export type UserCreate = { username: string; password: string; enabled?: boolean };
-export type UserUpdate = { password?: string; enabled?: boolean };
+export type User = { username: string; enabled: boolean; telegram_id?: string | undefined; created?: string; updated?: string };
+export type UserCreate = { username: string; password: string; enabled?: boolean; telegram_id?: string | undefined };
+export type UserUpdate = { password?: string; enabled?: boolean; telegram_id?: string | undefined };
 export type GuestRequestStatus = 'pending' | 'approved' | 'rejected' | 'archived';
 export type GuestRequestPayload = {
   message?: string;

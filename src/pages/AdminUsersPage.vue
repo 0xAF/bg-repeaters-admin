@@ -133,13 +133,41 @@
             />
             <q-input
               v-model="form.password"
-              label="Password"
+              :label="
+                dialog.mode === 'edit'
+                  ? 'Password (Optional - leave blank to keep current)'
+                  : 'Password'
+              "
               dense
               filled
               :type="showPass ? 'text' : 'password'"
               :rules="passwordRules"
             />
             <q-checkbox v-model="showPass" label="Show password" />
+            <q-input
+              v-model="form.telegram_id"
+              label="Telegram ID (Optional)"
+              dense
+              filled
+              hint="Your numeric Telegram user ID for receiving guest request notifications"
+              :rules="telegramIdRules"
+            />
+            <q-card flat bordered class="q-my-md">
+              <q-card-section class="text-caption">
+                <div class="text-weight-bold q-mb-md">📱 How to get your Telegram ID:</div>
+                <ol class="q-pl-md q-my-xs">
+                  <li>Message <code>@userinfobot</code> on Telegram</li>
+                  <li>Copy the <strong>Id</strong> number from the response (not your username)</li>
+                  <li>Paste it in the field above</li>
+                </ol>
+                <div class="q-mt-md text-weight-bold q-mb-xs">⚠️ Important:</div>
+                <p class="q-my-xs">
+                  Send at least one message to our bot <code>@bg_repeaters_bot</code> so it can send
+                  you notifications. After that, the bot will notify you about new guest requests
+                  and their resolution.
+                </p>
+              </q-card-section>
+            </q-card>
             <q-checkbox v-model="form.enabled" label="Enabled" />
             <div class="row justify-end q-gutter-sm">
               <q-btn flat label="Cancel" color="primary" @click="dialog.open = false" />
@@ -174,6 +202,13 @@ type UserRow = User;
 const columns: QTableColumn<UserRow>[] = [
   { name: 'username', label: 'Username', field: 'username', align: 'left', sortable: true },
   { name: 'enabled', label: 'Enabled', field: 'enabled', align: 'left', sortable: true },
+  {
+    name: 'telegram_id',
+    label: 'Telegram ID',
+    field: 'telegram_id',
+    align: 'left',
+    sortable: false,
+  },
   { name: 'created', label: 'Created', field: 'created', align: 'left', sortable: true },
   { name: 'updated', label: 'Updated', field: 'updated', align: 'left', sortable: true },
   { name: 'actions', label: '', field: 'username', align: 'right' },
@@ -202,10 +237,11 @@ const dialog = ref<{ open: boolean; mode: 'create' | 'edit'; data?: UserRow | nu
   data: null,
 });
 
-const form = ref<{ username: string; password: string; enabled: boolean }>({
+const form = ref<{ username: string; password: string; enabled: boolean; telegram_id: string }>({
   username: '',
   password: '',
   enabled: true,
+  telegram_id: '',
 });
 const showPass = ref(false);
 
@@ -213,14 +249,21 @@ const usernameRules = [
   (v: string) => !!v || 'Required',
   (v: string) => /^[A-Za-z0-9_]{3,}$/.test(v) || 'Min 3 chars: letters, numbers, _',
 ];
-const passwordRules = [
-  (v: string) => !!v || 'Required',
-  (v: string) => v.length >= 6 || 'Min length 6',
+const passwordRules = computed(() => {
+  if (dialog.value.mode === 'edit') {
+    // In edit mode, password is optional but must be valid if provided
+    return [(v: string) => !v || v.length >= 6 || 'Min length 6'];
+  }
+  // In create mode, password is required
+  return [(v: string) => !!v || 'Required', (v: string) => v.length >= 6 || 'Min length 6'];
+});
+const telegramIdRules = [
+  (v: string) => !v || /^\d+$/.test(v) || 'Telegram ID must be numeric (digits only)',
 ];
 
 function openCreate() {
   dialog.value = { open: true, mode: 'create', data: null };
-  form.value = { username: '', password: '', enabled: true };
+  form.value = { username: '', password: '', enabled: true, telegram_id: '' };
 }
 
 function openEdit(row: UserRow) {
@@ -229,7 +272,12 @@ function openEdit(row: UserRow) {
     return;
   }
   dialog.value = { open: true, mode: 'edit', data: row };
-  form.value = { username: row.username, password: '', enabled: row.enabled };
+  form.value = {
+    username: row.username,
+    password: '',
+    enabled: row.enabled,
+    telegram_id: row.telegram_id || '',
+  };
 }
 
 async function load() {
@@ -251,6 +299,7 @@ async function onSubmit() {
         username: form.value.username,
         password: form.value.password,
         enabled: form.value.enabled,
+        telegram_id: form.value.telegram_id || undefined,
       };
       await createUser(payload as unknown as Record<string, unknown>);
       $q.notify({ type: 'positive', message: 'User created' });
@@ -258,6 +307,7 @@ async function onSubmit() {
       const update: UserUpdate = {};
       if (form.value.password) update.password = form.value.password;
       update.enabled = form.value.enabled;
+      update.telegram_id = form.value.telegram_id || undefined;
       await updateUser(dialog.value.data.username, update as unknown as Record<string, unknown>);
       $q.notify({ type: 'positive', message: 'User updated' });
     }

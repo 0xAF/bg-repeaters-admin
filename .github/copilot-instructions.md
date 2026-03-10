@@ -380,6 +380,40 @@ npm run format           # Format code (Prettier)
 
 ## Common Development Tasks
 
+### Manage Telegram Notifications for Admin Users
+
+**Overview**: Each admin user can optionally configure their personal Telegram chat ID to receive notifications when guest requests are submitted or resolved. The frontend (`AdminUsersPage.vue`) provides a user-friendly interface with helptext.
+
+**User Setup Flow**:
+1. Admin opens `/admin/users` and creates/edits a user account
+2. In the "Telegram ID (Optional)" field, enter their numeric Telegram user ID (not their username)
+3. Instructions show how to get the ID via `@userinfobot`
+4. Backend will send notifications to all users with configured telegram_id
+
+**How to Get Telegram ID**:
+1. Message `@userinfobot` on Telegram
+2. Reply contains "Id: 123456789" — copy this number
+3. Paste into the Telegram ID field during user creation/edit (create form includes help text)
+
+**Important Pre-Requisite**:
+- User must send at least one message to the bot `@bg_repeaters_bot` before they can receive notifications
+- This authorizes the bot to initiate messages with the user
+
+**Form Fields** (`src/pages/AdminUsersPage.vue`):
+- **Username**: 3+ chars, letters/numbers/underscore (readonly on edit)
+- **Password**: 6+ chars (required for create, optional for edit)
+- **Telegram ID** (Optional): Numeric digits only, from `@userinfobot`
+- **Enabled**: Toggle to activate/disable user account
+
+**Validation**:
+- `telegramIdRules` enforces numeric-only validation (or empty for optional)
+- Backend also validates telegram_id on create/update
+
+**API Integration**:
+- `createUser(payload)` accepts optional `telegram_id` field
+- `updateUser(username, update)` accepts optional `telegram_id` field
+- Pass `undefined` to omit the field (leaves DB column NULL)
+
 ### Add a New Admin Page
 
 1. Create `src/pages/NewAdminPage.vue` component
