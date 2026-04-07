@@ -1439,7 +1439,7 @@ async function exportVisibleCsv() {
 }
 
 function callsignUrl(cs: string): string {
-  return `https://lz.free.bg/?callsign=${encodeURIComponent(cs)}`;
+  return `https://lz-map.org/?callsign=${encodeURIComponent(cs)}`;
 }
 
 function keeperUrl(name: string): string {

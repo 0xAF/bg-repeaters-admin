@@ -336,7 +336,7 @@
               label="Info (Markdown)"
               filled
               dense
-              :hint="'Supports basic Markdown: **bold**, *italic*, lists, links.'"
+              :hint="'Supports Markdown: **bold**, *italic*, lists, links, images ![alt](...). Saved as HTML.'"
             />
           </div>
           <div v-show="infoTab === 'preview'" class="q-mt-sm md-preview" v-html="infoHtml" />
@@ -776,17 +776,65 @@ function diffClass(path: string): string {
 // Tabs for Markdown edit/preview
 const infoTab = ref<'edit' | 'preview'>('edit');
 
-// Render Markdown to sanitized HTML
-const infoHtml = computed(() => {
-  const src = local.info || '';
+function isAllowedImageUrl(url: string): boolean {
+  const value = url.trim();
+  if (!value) return false;
+
+  // Reject explicit dangerous protocols.
+  if (/^(?:javascript|data|vbscript|file):/i.test(value)) return false;
+
+  // Accept explicit web URLs.
   try {
-    const raw = marked.parse(src, { breaks: true }); // may return string or Promise
-    if (typeof raw === 'string') return DOMPurify.sanitize(raw);
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    // Accept relative paths like img/a.jpg, ./img/a.jpg, ../img/a.jpg, /img/a.jpg
+    return /^(?:\.?\.?\/)?[^\s]+$/.test(value);
+  }
+}
+
+function escapeHtmlAttr(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+const markdownRenderer = new marked.Renderer();
+markdownRenderer.image = ({ href, title, text }) => {
+  if (!href || !isAllowedImageUrl(href)) return text || '';
+  const safeAlt = DOMPurify.sanitize(text || '', { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
+  const safeTitle = title ? DOMPurify.sanitize(title, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }) : '';
+  const safeSrc = escapeHtmlAttr(href.trim());
+  const altAttr = escapeHtmlAttr(safeAlt);
+  const titleAttr = safeTitle ? ` title="${escapeHtmlAttr(safeTitle)}"` : '';
+  return `<img src="${safeSrc}" alt="${altAttr}"${titleAttr} loading="lazy" referrerpolicy="no-referrer" />`;
+};
+
+function renderInfoMarkdownToHtml(src: string): string {
+  try {
+    const raw = marked.parse(src, {
+      breaks: true,
+      renderer: markdownRenderer,
+    }); // may return string or Promise
+    if (typeof raw === 'string') {
+      return DOMPurify.sanitize(raw, {
+        ADD_TAGS: ['img'],
+        ADD_ATTR: ['src', 'alt', 'title', 'loading', 'referrerpolicy'],
+      });
+    }
     // If Promise (async rendering), ignore for now and show placeholder
     return '<em>Rendering...</em>';
   } catch {
     return '<em>Failed to render markdown</em>';
   }
+}
+
+// Render Markdown to sanitized HTML
+const infoHtml = computed(() => {
+  const src = local.info || '';
+  return renderInfoMarkdownToHtml(src);
 });
 
 // Readonly aggregations for view mode
@@ -851,9 +899,9 @@ function onShowMap() {
   if (props.mode === 'view') {
     const cs = (local.callsign || '').trim();
     if (cs) {
-      window.open(`https://lz.free.bg/?callsign=${encodeURIComponent(cs)}`, '_blank');
+      window.open(`https://lz-map.org/?callsign=${encodeURIComponent(cs)}`, '_blank');
     } else {
-      window.open('https://lz.free.bg/', '_blank');
+      window.open('https://lz-map.org/', '_blank');
     }
   } else {
     mapDialog.value = true;
@@ -862,6 +910,9 @@ function onShowMap() {
 
 function onSubmit() {
   const payload = buildRepeaterPayload(toRaw(local) as RepeaterFormModel);
+  if (Array.isArray(payload.info) && payload.info.length && typeof payload.info[0] === 'string') {
+    payload.info = [renderInfoMarkdownToHtml(payload.info[0])];
+  }
   emit('save', payload);
 }
 
@@ -1075,6 +1126,13 @@ void Promise.resolve().then(syncMapHeight);
 .field-changed > .q-field,
 .field-changed.q-field {
   box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.65);
+  border-radius: 8px;
+}
+
+.md-preview :deep(img) {
+  max-width: 100%;
+  height: auto;
+  display: block;
   border-radius: 8px;
 }
 
